@@ -23,6 +23,7 @@ import org.gradle.api.plugins.JavaPlugin
 import org.gradle.api.plugins.JavaPluginConvention
 import org.gradle.api.plugins.JavaPluginExtension
 import org.gradle.api.tasks.SourceSetContainer
+import org.gradle.jvm.tasks.Jar
 import org.gradle.util.GradleVersion
 
 class KFramePlugin : Plugin<Project> {
@@ -37,6 +38,12 @@ class KFramePlugin : Plugin<Project> {
 
         getSourceSets(target).forEach { sourceSet ->
             sourceSet.allSource.srcDir("build/generated/src/${sourceSet.name}/kotlin")
+        }
+
+        target.tasks.withType(Jar::class.java) { jar ->
+            jar.manifest { manifest ->
+                manifest.attributes["Main-Class"] = "kframe.Main"
+            }
         }
     }
 

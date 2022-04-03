@@ -18,10 +18,12 @@
 package me.lusory.kframe.processor
 
 import com.google.devtools.ksp.getConstructors
+import com.google.devtools.ksp.isConstructor
 import com.google.devtools.ksp.processing.*
 import com.google.devtools.ksp.symbol.*
 import com.squareup.kotlinpoet.*
 import com.squareup.kotlinpoet.ksp.KotlinPoetKspPreview
+import com.squareup.kotlinpoet.ksp.toClassName
 import com.squareup.kotlinpoet.ksp.writeTo
 import me.lusory.kframe.processor.exceptions.CircularDependencyException
 import me.lusory.kframe.processor.exceptions.DependencyResolveException
@@ -85,11 +87,43 @@ class KFrameProcessor(private val environment: SymbolProcessorEnvironment) : Sym
                     val type: ClassName = ClassName.bestGuess(className)
                     val varName = "var${varCount++}"
                     mainBuilder.addStatement("val $varName: %T = %T(${params.joinToString(", ")})", type, type)
-                    mainBuilder.addStatement("instance($varName)")
+                    mainBuilder.addStatement("addInstance($varName)")
 
                     vars.getOrPut(className) { mutableListOf() }.add(varName)
 
                     environment.logger.info("Processed $className.")
+                } else if (symbol is KSFunctionDeclaration && symbol.functionKind == FunctionKind.TOP_LEVEL) {
+                    symbol.containingFile?.let { deps.add(it) }
+
+                    val params: MutableList<String> = mutableListOf()
+
+                    val returnType: KSType = symbol.returnType!!.resolve()
+                    val className: String = returnType.declaration.qualifiedName!!.asString()
+
+                    environment.logger.info("Processing method ${symbol.simpleName} with type $className...")
+
+                    for (param: KSValueParameter in symbol.parameters) {
+                        val varName: String? = param.type.resolve().declaration.qualifiedName?.asString()
+                            ?.let { vars[it] }
+                            ?.let { it[0] }
+
+                        if (varName != null) {
+                            params.add(varName)
+                        } else {
+                            environment.logger.info("Adding method ${symbol.simpleName} with type $className to backlog (unknown parameter).")
+                            backlog.add(Pair(returnType.declaration as KSClassDeclaration, symbol))
+                            return@forEach
+                        }
+                    }
+
+                    val methodType = MemberName(symbol.packageName.asString(), symbol.simpleName.asString())
+                    val varName = "var${varCount++}"
+                    mainBuilder.addStatement("val $varName: %T = %M(${params.joinToString(", ")})", returnType.toClassName(), methodType)
+                    mainBuilder.addStatement("addInstance($varName)")
+
+                    vars.getOrPut(className) { mutableListOf() }.add(varName)
+
+                    environment.logger.info("Processed method ${symbol.simpleName} with type $className.")
                 }
             }
 
@@ -119,10 +153,16 @@ class KFrameProcessor(private val environment: SymbolProcessorEnvironment) : Sym
                     }
                 }
 
-                val type: ClassName = ClassName.bestGuess(className)
                 val varName = "var${varCount++}"
-                mainBuilder.addStatement("val $varName: %T = %T(${params.joinToString(", ")})", type, type)
-                mainBuilder.addStatement("instance($varName)")
+                if (ctor.isConstructor()) {
+                    val type: ClassName = ClassName.bestGuess(className)
+                    mainBuilder.addStatement("val $varName: %T = %T(${params.joinToString(", ")})", type, type)
+                    mainBuilder.addStatement("addInstance($varName)")
+                } else {
+                    val methodType = MemberName(ctor.packageName.asString(), ctor.simpleName.asString())
+                    mainBuilder.addStatement("val $varName: %T = %M(${params.joinToString(", ")})", classDeclaration.toClassName(), methodType)
+                    mainBuilder.addStatement("addInstance($varName)")
+                }
 
                 vars.getOrPut(className) { mutableListOf() }.add(varName)
 
@@ -137,7 +177,11 @@ class KFrameProcessor(private val environment: SymbolProcessorEnvironment) : Sym
             }
         }
 
-        builder.addFunction(mainBuilder.endControlFlow().build())
+        mainBuilder.endControlFlow()
+
+        builder.addFunction(mainBuilder.build())
+            .indent("    ") // 4 space indent
+            .addFileComment("This file was generated with KFrame. Do not edit, changes will be overwritten!")
             .build()
             .writeTo(environment.codeGenerator, true, deps)
 

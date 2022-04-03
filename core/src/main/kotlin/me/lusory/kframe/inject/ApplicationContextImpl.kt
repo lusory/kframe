@@ -21,12 +21,12 @@ import kotlin.reflect.KClass
 import kotlin.reflect.full.isSubclassOf
 
 internal class ApplicationContextImpl(override val components: MutableSet<Any>) : ApplicationContext {
-    override fun getComponents(klass: KClass<*>): List<Any> = components.filter { it::class.isSubclassOf(klass) }
+    override fun components(klass: KClass<*>): List<Any> = components.filter { it::class.isSubclassOf(klass) }
 
     internal class Builder : ApplicationContext.Builder {
         private val components: MutableSet<Any> = mutableSetOf()
 
-        override fun instance(instance: Any) {
+        override fun addInstance(instance: Any) {
             components.add(instance)
         }
 

@@ -22,12 +22,12 @@ import kotlin.reflect.KClass
 interface ApplicationContext {
     val components: MutableSet<Any>
 
-    fun getComponents(klass: KClass<*>): List<Any>
+    fun components(klass: KClass<*>): List<Any>
 
-    fun getComponent(klass: KClass<*>): Any = getComponents(klass)[0]
+    fun component(klass: KClass<*>): Any = components(klass)[0]
 
     interface Builder {
-        fun instance(instance: Any)
+        fun addInstance(instance: Any)
 
         fun build(): ApplicationContext
     }
