@@ -49,8 +49,8 @@ class KFrameProcessor(private val environment: SymbolProcessorEnvironment) : Sym
         val mainBuilder: FunSpec.Builder = FunSpec.builder("main")
             .addParameter("args", String::class, KModifier.VARARG)
             .beginControlFlow(
-                "val context: %T = %M",
-                ClassName("me.lusory.kframe.inject", "ApplicationContext"),
+                "%M",
+                // ClassName("me.lusory.kframe.inject", "ApplicationContext"),
                 MemberName("me.lusory.kframe.inject", "buildContext")
             )
 

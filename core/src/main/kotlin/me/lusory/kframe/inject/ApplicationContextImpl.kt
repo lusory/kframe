@@ -18,9 +18,28 @@
 package me.lusory.kframe.inject
 
 import kotlin.reflect.KClass
+import kotlin.reflect.KMutableProperty1
+import kotlin.reflect.KType
+import kotlin.reflect.full.createType
 import kotlin.reflect.full.isSubclassOf
+import kotlin.reflect.full.memberProperties
 
 internal class ApplicationContextImpl(override val components: MutableSet<Any>) : ApplicationContext {
+    companion object {
+        private val TYPE: KType = ApplicationContext::class.createType()
+    }
+
+    init {
+        for (component: Any in components) {
+            component::class.memberProperties.stream()
+                .filter { it.isLateinit && it is KMutableProperty1 && it.returnType == TYPE }
+                .forEach {
+                    @Suppress("UNCHECKED_CAST")
+                    (it as KMutableProperty1<Any, ApplicationContext>).set(component, this)
+                }
+        }
+    }
+
     override fun components(klass: KClass<*>): List<Any> = components.filter { it::class.isSubclassOf(klass) }
 
     internal class Builder : ApplicationContext.Builder {

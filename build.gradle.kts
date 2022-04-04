@@ -25,6 +25,7 @@ subprojects {
     }
 
     dependencies {
+        // added by user
         compileOnly(kotlin("stdlib"))
         compileOnly(kotlin("reflect"))
     }

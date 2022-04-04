@@ -17,27 +17,32 @@
 
 package me.lusory.kframe.gradle.plugin
 
+import com.google.devtools.ksp.gradle.KspGradleSubplugin
+import me.lusory.kframe.gradle.BuildInfo
 import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.api.plugins.JavaPlugin
-import org.gradle.api.plugins.JavaPluginConvention
-import org.gradle.api.plugins.JavaPluginExtension
-import org.gradle.api.tasks.SourceSetContainer
 import org.gradle.jvm.tasks.Jar
-import org.gradle.util.GradleVersion
+import org.jetbrains.kotlin.gradle.dsl.KotlinJvmProjectExtension
 
 class KFramePlugin : Plugin<Project> {
     override fun apply(target: Project) {
         if (!target.plugins.hasPlugin(JavaPlugin::class.java)) {
             target.plugins.apply(JavaPlugin::class.java)
         }
-        target.pluginManager.apply("com.google.devtools.ksp")
+        target.pluginManager.apply(KspGradleSubplugin::class.java)
 
-        target.dependencies.add("implementation", "me.lusory.kframe:core:0.0.1-SNAPSHOT")
-        target.dependencies.add("ksp", "me.lusory.kframe:annotation:0.0.1-SNAPSHOT")
+        target.dependencies.add("implementation", "me.lusory.kframe:core:${BuildInfo.VERSION}")
+        target.dependencies.add("ksp", "me.lusory.kframe:annotation:${BuildInfo.VERSION}")
 
-        getSourceSets(target).forEach { sourceSet ->
-            sourceSet.allSource.srcDir("build/generated/src/${sourceSet.name}/kotlin")
+        try {
+            target.extensions.configure(KotlinJvmProjectExtension::class.java) {
+                it.sourceSets.forEach { sourceSet ->
+                    sourceSet.kotlin.srcDir("build/generated/ksp/${sourceSet.name}/kotlin")
+                }
+            }
+        } catch (ignored: NoClassDefFoundError) {
+            throw RuntimeException("The Kotlin Gradle plugin needs to be available on the classpath for KFrame to work!")
         }
 
         target.tasks.withType(Jar::class.java) { jar ->
@@ -46,9 +51,4 @@ class KFramePlugin : Plugin<Project> {
             }
         }
     }
-
-    @Suppress("DEPRECATION")
-    private fun getSourceSets(project: Project): SourceSetContainer =
-        if (GradleVersion.version(project.gradle.gradleVersion) < GradleVersion.version("7.1")) project.convention.getPlugin(JavaPluginConvention::class.java).sourceSets
-        else project.extensions.getByType(JavaPluginExtension::class.java).sourceSets
 }
