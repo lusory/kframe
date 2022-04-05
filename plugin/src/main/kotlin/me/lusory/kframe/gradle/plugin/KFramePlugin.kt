@@ -21,15 +21,11 @@ import com.google.devtools.ksp.gradle.KspGradleSubplugin
 import me.lusory.kframe.gradle.BuildInfo
 import org.gradle.api.Plugin
 import org.gradle.api.Project
-import org.gradle.api.plugins.JavaPlugin
 import org.gradle.jvm.tasks.Jar
 import org.jetbrains.kotlin.gradle.dsl.KotlinJvmProjectExtension
 
 class KFramePlugin : Plugin<Project> {
     override fun apply(target: Project) {
-        if (!target.plugins.hasPlugin(JavaPlugin::class.java)) {
-            target.plugins.apply(JavaPlugin::class.java)
-        }
         target.pluginManager.apply(KspGradleSubplugin::class.java)
 
         target.dependencies.add("implementation", "me.lusory.kframe:core:${BuildInfo.VERSION}")

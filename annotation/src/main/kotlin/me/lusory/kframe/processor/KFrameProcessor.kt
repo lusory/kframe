@@ -22,10 +22,10 @@ import com.google.devtools.ksp.isConstructor
 import com.google.devtools.ksp.processing.*
 import com.google.devtools.ksp.symbol.*
 import com.squareup.kotlinpoet.*
+import com.squareup.kotlinpoet.jvm.jvmName
 import com.squareup.kotlinpoet.ksp.KotlinPoetKspPreview
 import com.squareup.kotlinpoet.ksp.toClassName
 import com.squareup.kotlinpoet.ksp.writeTo
-import me.lusory.kframe.processor.exceptions.CircularDependencyException
 import me.lusory.kframe.processor.exceptions.DependencyResolveException
 
 @OptIn(KotlinPoetKspPreview::class)
@@ -38,11 +38,7 @@ class KFrameProcessor(private val environment: SymbolProcessorEnvironment) : Sym
         }
 
         val builder: FileSpec.Builder = FileSpec.builder("kframe", "Main")
-            .addAnnotation(
-                AnnotationSpec.builder(JvmName::class)
-                    .addMember("name = %S", "Main")
-                    .build()
-            )
+            .jvmName("Main")
 
         val deps: MutableSet<KSFile> = mutableSetOf()
 
@@ -86,8 +82,9 @@ class KFrameProcessor(private val environment: SymbolProcessorEnvironment) : Sym
 
                     val type: ClassName = ClassName.bestGuess(className)
                     val varName = "var${varCount++}"
-                    mainBuilder.addStatement("val $varName: %T = %T(${params.joinToString(", ")})", type, type)
-                    mainBuilder.addStatement("addInstance($varName)")
+                    mainBuilder.beginControlFlow("val $varName: %T = newComponent", type)
+                        .addStatement("%T(${params.joinToString(", ")})", type)
+                        .endControlFlow()
 
                     vars.getOrPut(className) { mutableListOf() }.add(varName)
 
@@ -118,8 +115,9 @@ class KFrameProcessor(private val environment: SymbolProcessorEnvironment) : Sym
 
                     val methodType = MemberName(symbol.packageName.asString(), symbol.simpleName.asString())
                     val varName = "var${varCount++}"
-                    mainBuilder.addStatement("val $varName: %T = %M(${params.joinToString(", ")})", returnType.toClassName(), methodType)
-                    mainBuilder.addStatement("addInstance($varName)")
+                    mainBuilder.beginControlFlow("val $varName: %T = newComponent", returnType.toClassName())
+                        .addStatement("%M(${params.joinToString(", ")})", methodType)
+                        .endControlFlow()
 
                     vars.getOrPut(className) { mutableListOf() }.add(varName)
 
@@ -156,12 +154,14 @@ class KFrameProcessor(private val environment: SymbolProcessorEnvironment) : Sym
                 val varName = "var${varCount++}"
                 if (ctor.isConstructor()) {
                     val type: ClassName = ClassName.bestGuess(className)
-                    mainBuilder.addStatement("val $varName: %T = %T(${params.joinToString(", ")})", type, type)
-                    mainBuilder.addStatement("addInstance($varName)")
+                    mainBuilder.beginControlFlow("val $varName: %T = newComponent", type)
+                        .addStatement("%T(${params.joinToString(", ")})", type)
+                        .endControlFlow()
                 } else {
                     val methodType = MemberName(ctor.packageName.asString(), ctor.simpleName.asString())
-                    mainBuilder.addStatement("val $varName: %T = %M(${params.joinToString(", ")})", classDeclaration.toClassName(), methodType)
-                    mainBuilder.addStatement("addInstance($varName)")
+                    mainBuilder.beginControlFlow("val $varName: %T = newComponent", classDeclaration.toClassName())
+                        .addStatement("%M(${params.joinToString(", ")})", methodType)
+                        .endControlFlow()
                 }
 
                 vars.getOrPut(className) { mutableListOf() }.add(varName)
@@ -173,7 +173,7 @@ class KFrameProcessor(private val environment: SymbolProcessorEnvironment) : Sym
             }
 
             if (!modified) {
-                throw CircularDependencyException(backlog.joinToString(", "))
+                throw DependencyResolveException("Unsatisfied dependency (possible circular dependency), backlog: ${backlog.joinToString(", ")}")
             }
         }
 

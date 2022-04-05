@@ -17,11 +17,9 @@
 
 package me.lusory.kframe.inject
 
-import kotlin.reflect.KClass
 import kotlin.reflect.KMutableProperty1
 import kotlin.reflect.KType
 import kotlin.reflect.full.createType
-import kotlin.reflect.full.isSubclassOf
 import kotlin.reflect.full.memberProperties
 
 internal class ApplicationContextImpl(override val components: MutableSet<Any>) : ApplicationContext {
@@ -30,24 +28,22 @@ internal class ApplicationContextImpl(override val components: MutableSet<Any>) 
     }
 
     init {
-        for (component: Any in components) {
-            component::class.memberProperties.stream()
-                .filter { it.isLateinit && it is KMutableProperty1 && it.returnType == TYPE }
-                .forEach {
-                    @Suppress("UNCHECKED_CAST")
-                    (it as KMutableProperty1<Any, ApplicationContext>).set(component, this)
-                }
-        }
+        components.forEach { prepareComponent0(it) }
     }
 
-    override fun components(klass: KClass<*>): List<Any> = components.filter { it::class.isSubclassOf(klass) }
+    private fun prepareComponent0(component: Any) {
+        component::class.memberProperties.stream()
+            .filter { it.isLateinit && it is KMutableProperty1 && it.returnType == TYPE }
+            .forEach {
+                @Suppress("UNCHECKED_CAST")
+                (it as KMutableProperty1<Any, ApplicationContext>).set(component, this)
+            }
+    }
 
     internal class Builder : ApplicationContext.Builder {
         private val components: MutableSet<Any> = mutableSetOf()
 
-        override fun addInstance(instance: Any) {
-            components.add(instance)
-        }
+        override fun <T : Any> newComponent(block: () -> T): T = block().also { components.add(it) }
 
         override fun build(): ApplicationContextImpl = ApplicationContextImpl(components.toMutableSet())
     }

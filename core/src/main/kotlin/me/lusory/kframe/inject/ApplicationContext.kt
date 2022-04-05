@@ -18,16 +18,15 @@
 package me.lusory.kframe.inject
 
 import kotlin.reflect.KClass
+import kotlin.reflect.full.isSubclassOf
 
 interface ApplicationContext {
-    val components: MutableSet<Any>
+    val components: Set<Any>
 
-    fun components(klass: KClass<*>): List<Any>
-
-    fun component(klass: KClass<*>): Any = components(klass)[0]
+    operator fun get(klass: KClass<*>): Any? = components.firstOrNull { it::class.isSubclassOf(klass) }
 
     interface Builder {
-        fun addInstance(instance: Any)
+        fun <T : Any> newComponent(block: () -> T): T
 
         fun build(): ApplicationContext
     }
