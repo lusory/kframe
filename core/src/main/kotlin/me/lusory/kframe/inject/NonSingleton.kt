@@ -17,21 +17,7 @@
 
 package me.lusory.kframe.inject
 
-import kotlin.reflect.KClass
-import kotlin.reflect.full.isSubclassOf
-
-interface ApplicationContext {
-    val components: Set<Any>
-
-    operator fun get(klass: KClass<*>): Any? = components.firstOrNull { it::class.isSubclassOf(klass) }
-
-    interface Builder {
-        fun <T : Any> newComponent(block: () -> T): T
-
-        fun <T : Any> newComponentProvider(block: () -> T): () -> T = { newComponent(block) }
-
-        fun build(): ApplicationContext
-    }
-}
-
-fun buildContext(block: ApplicationContext.Builder.() -> Unit): ApplicationContext = ApplicationContextImpl.Builder().also(block).build()
+@Target(AnnotationTarget.CLASS, AnnotationTarget.FUNCTION)
+@Retention(AnnotationRetention.RUNTIME)
+@MustBeDocumented
+annotation class NonSingleton

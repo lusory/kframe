@@ -58,8 +58,8 @@ class KFrameProcessor(private val environment: SymbolProcessorEnvironment) : Sym
         val deps: MutableSet<KSFile> = mutableSetOf()
 
         var varCount = 0
-        val vars: MutableMap<String, MutableList<String>> = mutableMapOf()
-        val backlog: MutableList<Pair<KSClassDeclaration, KSFunctionDeclaration>> = mutableListOf()
+        val vars: MutableMap<String, Pair<String, Boolean>> = mutableMapOf()
+        val backlog: MutableList<Triple<KSClassDeclaration, KSFunctionDeclaration, Boolean>> = mutableListOf()
 
         resolver.getSymbolsWithAnnotation("me.lusory.kframe.inject.Component")
             .forEach { symbol ->
@@ -73,19 +73,20 @@ class KFrameProcessor(private val environment: SymbolProcessorEnvironment) : Sym
                     val elemDeclaration: KSClassDeclaration =
                         if (symbol is KSClassDeclaration) symbol else func.returnType!!.resolve().declaration as KSClassDeclaration
                     val symbolClassName: String = elemDeclaration.qualifiedName!!.asString()
+                    val isNonSingleton: Boolean = symbol.isAnnotationPresent("me.lusory.kframe.inject.NonSingleton")
 
                     environment.logger.info("Processing $symbolClassName...")
 
                     for (param: KSValueParameter in func.parameters) {
                         val varName: String? = param.type.resolve().declaration.qualifiedName?.asString()
                             ?.let { vars[it] }
-                            ?.let { it[0] }
+                            ?.let { if (it.second) "${it.first}()" else it.first }
 
                         if (varName != null) {
                             params.add(varName)
                         } else {
                             environment.logger.info("Adding $symbolClassName to backlog (unknown parameter).")
-                            backlog.add(Pair(elemDeclaration, func))
+                            backlog.add(Triple(elemDeclaration, func, isNonSingleton))
                             return@forEach
                         }
                     }
@@ -93,17 +94,17 @@ class KFrameProcessor(private val environment: SymbolProcessorEnvironment) : Sym
                     val varName = "var${varCount++}"
                     if (func.isConstructor()) {
                         val type: ClassName = ClassName.bestGuess(symbolClassName)
-                        mainBuilder.beginControlFlow("val $varName: %T = newComponent", type)
+                        mainBuilder.beginControlFlow(if (isNonSingleton) "val $varName: () -> %T = newComponentProvider" else "val $varName: %T = newComponent", type)
                             .addStatement("%T(${params.joinToString(", ")})", type)
                             .endControlFlow()
                     } else {
                         val methodType = MemberName(func.packageName.asString(), func.simpleName.asString())
-                        mainBuilder.beginControlFlow("val $varName: %T = newComponent", elemDeclaration.toClassName())
+                        mainBuilder.beginControlFlow(if (isNonSingleton) "val $varName: () -> %T = newComponentProvider" else "val $varName: %T = newComponent", elemDeclaration.toClassName())
                             .addStatement("%M(${params.joinToString(", ")})", methodType)
                             .endControlFlow()
                     }
 
-                    vars.getOrPut(symbolClassName) { mutableListOf() }.add(varName)
+                    vars[symbolClassName] = Pair(varName, isNonSingleton)
 
                     environment.logger.info("Processed $symbolClassName.")
                 }
@@ -113,10 +114,10 @@ class KFrameProcessor(private val environment: SymbolProcessorEnvironment) : Sym
             var modified = false
             val iter = backlog.listIterator()
             loop@ while (iter.hasNext()) {
-                val pair = iter.next()
-                val classDeclaration: KSClassDeclaration = pair.first
+                val triple = iter.next()
+                val classDeclaration: KSClassDeclaration = triple.first
 
-                val func: KSFunctionDeclaration = pair.second
+                val func: KSFunctionDeclaration = triple.second
                 val params: MutableList<String> = mutableListOf()
 
                 val symbolClassName: String = classDeclaration.qualifiedName!!.asString()
@@ -126,7 +127,7 @@ class KFrameProcessor(private val environment: SymbolProcessorEnvironment) : Sym
                 for (param: KSValueParameter in func.parameters) {
                     val varName: String? = param.type.resolve().declaration.qualifiedName?.asString()
                         ?.let { vars[it] }
-                        ?.let { it[0] }
+                        ?.let { if (it.second) "${it.first}()" else it.first }
 
                     if (varName != null) {
                         params.add(varName)
@@ -135,20 +136,21 @@ class KFrameProcessor(private val environment: SymbolProcessorEnvironment) : Sym
                     }
                 }
 
+                val isNonSingleton = triple.third
                 val varName = "var${varCount++}"
                 if (func.isConstructor()) {
                     val type: ClassName = ClassName.bestGuess(symbolClassName)
-                    mainBuilder.beginControlFlow("val $varName: %T = newComponent", type)
+                    mainBuilder.beginControlFlow(if (isNonSingleton) "val $varName: () -> %T = newComponentProvider" else "val $varName: %T = newComponent", type)
                         .addStatement("%T(${params.joinToString(", ")})", type)
                         .endControlFlow()
                 } else {
                     val methodType = MemberName(func.packageName.asString(), func.simpleName.asString())
-                    mainBuilder.beginControlFlow("val $varName: %T = newComponent", classDeclaration.toClassName())
+                    mainBuilder.beginControlFlow(if (isNonSingleton) "val $varName: () -> %T = newComponentProvider" else "val $varName: %T = newComponent", classDeclaration.toClassName())
                         .addStatement("%M(${params.joinToString(", ")})", methodType)
                         .endControlFlow()
                 }
 
-                vars.getOrPut(symbolClassName) { mutableListOf() }.add(varName)
+                vars[symbolClassName] = Pair(varName, isNonSingleton)
 
                 modified = true
                 iter.remove()
