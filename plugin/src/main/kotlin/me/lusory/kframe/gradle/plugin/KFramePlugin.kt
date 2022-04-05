@@ -17,6 +17,7 @@
 
 package me.lusory.kframe.gradle.plugin
 
+import com.google.devtools.ksp.gradle.KspExtension
 import com.google.devtools.ksp.gradle.KspGradleSubplugin
 import me.lusory.kframe.gradle.BuildInfo
 import org.gradle.api.Plugin
@@ -26,7 +27,14 @@ import org.jetbrains.kotlin.gradle.dsl.KotlinJvmProjectExtension
 
 class KFramePlugin : Plugin<Project> {
     override fun apply(target: Project) {
+        val extension: KFramePluginExtension = target.extensions.create("kframe", KFramePluginExtension::class.java)
+
         target.pluginManager.apply(KspGradleSubplugin::class.java)
+
+        target.extensions.configure(KspExtension::class.java) { ext ->
+            ext.arg("packageName", extension.mainPackageName)
+            ext.arg("className", extension.mainClassName)
+        }
 
         target.dependencies.add("implementation", "me.lusory.kframe:core:${BuildInfo.VERSION}")
         target.dependencies.add("ksp", "me.lusory.kframe:annotation:${BuildInfo.VERSION}")
@@ -43,7 +51,7 @@ class KFramePlugin : Plugin<Project> {
 
         target.tasks.withType(Jar::class.java) { jar ->
             jar.manifest { manifest ->
-                manifest.attributes["Main-Class"] = "kframe.Main"
+                manifest.attributes["Main-Class"] = extension.mainFQClassName
             }
         }
     }

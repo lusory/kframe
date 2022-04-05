@@ -17,11 +17,15 @@
 
 package me.lusory.kframe.processor
 
+import com.google.devtools.ksp.containingFile
 import com.google.devtools.ksp.getConstructors
 import com.google.devtools.ksp.isConstructor
-import com.google.devtools.ksp.processing.*
+import com.google.devtools.ksp.processing.Resolver
+import com.google.devtools.ksp.processing.SymbolProcessor
+import com.google.devtools.ksp.processing.SymbolProcessorEnvironment
 import com.google.devtools.ksp.symbol.*
 import com.squareup.kotlinpoet.*
+import com.squareup.kotlinpoet.ParameterizedTypeName.Companion.parameterizedBy
 import com.squareup.kotlinpoet.jvm.jvmName
 import com.squareup.kotlinpoet.ksp.KotlinPoetKspPreview
 import com.squareup.kotlinpoet.ksp.toClassName
@@ -37,18 +41,21 @@ class KFrameProcessor(private val environment: SymbolProcessorEnvironment) : Sym
             return listOf()
         }
 
-        val builder: FileSpec.Builder = FileSpec.builder("kframe", "Main")
-            .jvmName("Main")
+        val packageName: String = environment.options["packageName"] ?: "kframe"
+        val className: String = environment.options["className"] ?: "Main"
 
-        val deps: MutableSet<KSFile> = mutableSetOf()
+        val builder: FileSpec.Builder = FileSpec.builder(packageName, className)
+            .jvmName(className)
 
         val mainBuilder: FunSpec.Builder = FunSpec.builder("main")
-            .addParameter("args", String::class, KModifier.VARARG)
+            .addParameter("args", ARRAY.parameterizedBy(STRING))
             .beginControlFlow(
                 "%M",
                 // ClassName("me.lusory.kframe.inject", "ApplicationContext"),
                 MemberName("me.lusory.kframe.inject", "buildContext")
             )
+
+        val deps: MutableSet<KSFile> = mutableSetOf()
 
         var varCount = 0
         val vars: MutableMap<String, MutableList<String>> = mutableMapOf()
@@ -56,17 +63,20 @@ class KFrameProcessor(private val environment: SymbolProcessorEnvironment) : Sym
 
         resolver.getSymbolsWithAnnotation("me.lusory.kframe.inject.Component")
             .forEach { symbol ->
-                if (symbol is KSClassDeclaration && symbol.classKind == ClassKind.CLASS && symbol.isAccessible()) {
+                if (((symbol is KSClassDeclaration && symbol.classKind == ClassKind.CLASS) || (symbol is KSFunctionDeclaration && symbol.functionKind == FunctionKind.TOP_LEVEL)) && (symbol as KSModifierListOwner).isAccessible()) {
                     symbol.containingFile?.let { deps.add(it) }
 
-                    val ctor: KSFunctionDeclaration = selectConstructor(symbol)
+                    val func: KSFunctionDeclaration =
+                        if (symbol is KSClassDeclaration) selectConstructor(symbol) else symbol as KSFunctionDeclaration
                     val params: MutableList<String> = mutableListOf()
 
-                    val className: String = symbol.qualifiedName!!.asString()
+                    val elemDeclaration: KSClassDeclaration =
+                        if (symbol is KSClassDeclaration) symbol else func.returnType!!.resolve().declaration as KSClassDeclaration
+                    val symbolClassName: String = elemDeclaration.qualifiedName!!.asString()
 
-                    environment.logger.info("Processing $className...")
+                    environment.logger.info("Processing $symbolClassName...")
 
-                    for (param: KSValueParameter in ctor.parameters) {
+                    for (param: KSValueParameter in func.parameters) {
                         val varName: String? = param.type.resolve().declaration.qualifiedName?.asString()
                             ?.let { vars[it] }
                             ?.let { it[0] }
@@ -74,72 +84,46 @@ class KFrameProcessor(private val environment: SymbolProcessorEnvironment) : Sym
                         if (varName != null) {
                             params.add(varName)
                         } else {
-                            environment.logger.info("Adding $className to backlog (unknown parameter).")
-                            backlog.add(Pair(symbol, ctor))
+                            environment.logger.info("Adding $symbolClassName to backlog (unknown parameter).")
+                            backlog.add(Pair(elemDeclaration, func))
                             return@forEach
                         }
                     }
 
-                    val type: ClassName = ClassName.bestGuess(className)
                     val varName = "var${varCount++}"
-                    mainBuilder.beginControlFlow("val $varName: %T = newComponent", type)
-                        .addStatement("%T(${params.joinToString(", ")})", type)
-                        .endControlFlow()
-
-                    vars.getOrPut(className) { mutableListOf() }.add(varName)
-
-                    environment.logger.info("Processed $className.")
-                } else if (symbol is KSFunctionDeclaration && symbol.functionKind == FunctionKind.TOP_LEVEL) {
-                    symbol.containingFile?.let { deps.add(it) }
-
-                    val params: MutableList<String> = mutableListOf()
-
-                    val returnType: KSType = symbol.returnType!!.resolve()
-                    val className: String = returnType.declaration.qualifiedName!!.asString()
-
-                    environment.logger.info("Processing method ${symbol.simpleName} with type $className...")
-
-                    for (param: KSValueParameter in symbol.parameters) {
-                        val varName: String? = param.type.resolve().declaration.qualifiedName?.asString()
-                            ?.let { vars[it] }
-                            ?.let { it[0] }
-
-                        if (varName != null) {
-                            params.add(varName)
-                        } else {
-                            environment.logger.info("Adding method ${symbol.simpleName} with type $className to backlog (unknown parameter).")
-                            backlog.add(Pair(returnType.declaration as KSClassDeclaration, symbol))
-                            return@forEach
-                        }
+                    if (func.isConstructor()) {
+                        val type: ClassName = ClassName.bestGuess(symbolClassName)
+                        mainBuilder.beginControlFlow("val $varName: %T = newComponent", type)
+                            .addStatement("%T(${params.joinToString(", ")})", type)
+                            .endControlFlow()
+                    } else {
+                        val methodType = MemberName(func.packageName.asString(), func.simpleName.asString())
+                        mainBuilder.beginControlFlow("val $varName: %T = newComponent", elemDeclaration.toClassName())
+                            .addStatement("%M(${params.joinToString(", ")})", methodType)
+                            .endControlFlow()
                     }
 
-                    val methodType = MemberName(symbol.packageName.asString(), symbol.simpleName.asString())
-                    val varName = "var${varCount++}"
-                    mainBuilder.beginControlFlow("val $varName: %T = newComponent", returnType.toClassName())
-                        .addStatement("%M(${params.joinToString(", ")})", methodType)
-                        .endControlFlow()
+                    vars.getOrPut(symbolClassName) { mutableListOf() }.add(varName)
 
-                    vars.getOrPut(className) { mutableListOf() }.add(varName)
-
-                    environment.logger.info("Processed method ${symbol.simpleName} with type $className.")
+                    environment.logger.info("Processed $symbolClassName.")
                 }
             }
 
         while (backlog.isNotEmpty()) {
             var modified = false
             val iter = backlog.listIterator()
-            loop@while (iter.hasNext()) {
+            loop@ while (iter.hasNext()) {
                 val pair = iter.next()
                 val classDeclaration: KSClassDeclaration = pair.first
-                val ctor: KSFunctionDeclaration = pair.second
 
+                val func: KSFunctionDeclaration = pair.second
                 val params: MutableList<String> = mutableListOf()
 
-                val className: String = classDeclaration.qualifiedName!!.asString()
+                val symbolClassName: String = classDeclaration.qualifiedName!!.asString()
 
-                environment.logger.info("Processing $className from backlog...")
+                environment.logger.info("Processing $symbolClassName from backlog...")
 
-                for (param: KSValueParameter in ctor.parameters) {
+                for (param: KSValueParameter in func.parameters) {
                     val varName: String? = param.type.resolve().declaration.qualifiedName?.asString()
                         ?.let { vars[it] }
                         ?.let { it[0] }
@@ -152,28 +136,30 @@ class KFrameProcessor(private val environment: SymbolProcessorEnvironment) : Sym
                 }
 
                 val varName = "var${varCount++}"
-                if (ctor.isConstructor()) {
-                    val type: ClassName = ClassName.bestGuess(className)
+                if (func.isConstructor()) {
+                    val type: ClassName = ClassName.bestGuess(symbolClassName)
                     mainBuilder.beginControlFlow("val $varName: %T = newComponent", type)
                         .addStatement("%T(${params.joinToString(", ")})", type)
                         .endControlFlow()
                 } else {
-                    val methodType = MemberName(ctor.packageName.asString(), ctor.simpleName.asString())
+                    val methodType = MemberName(func.packageName.asString(), func.simpleName.asString())
                     mainBuilder.beginControlFlow("val $varName: %T = newComponent", classDeclaration.toClassName())
                         .addStatement("%M(${params.joinToString(", ")})", methodType)
                         .endControlFlow()
                 }
 
-                vars.getOrPut(className) { mutableListOf() }.add(varName)
+                vars.getOrPut(symbolClassName) { mutableListOf() }.add(varName)
 
                 modified = true
                 iter.remove()
 
-                environment.logger.info("Processed $className from backlog.")
+                environment.logger.info("Processed $symbolClassName from backlog.")
             }
 
             if (!modified) {
-                throw DependencyResolveException("Unsatisfied dependency (possible circular dependency), backlog: ${backlog.joinToString(", ")}")
+                throw DependencyResolveException("Unsatisfied dependency (possible circular dependency), backlog: ${
+                    backlog.joinToString(", ")
+                }")
             }
         }
 
@@ -185,7 +171,7 @@ class KFrameProcessor(private val environment: SymbolProcessorEnvironment) : Sym
             .build()
             .writeTo(environment.codeGenerator, true, deps)
 
-        environment.logger.info("Created kframe.Main.")
+        environment.logger.info("Created ${packageName}.${className}.")
 
         invoked = true
         return listOf()
@@ -201,7 +187,7 @@ class KFrameProcessor(private val environment: SymbolProcessorEnvironment) : Sym
     }
 
     private fun KSAnnotated.isAnnotationPresent(qualifiedName: String): Boolean {
-        val simpleName: String = qualifiedName.substring(qualifiedName.lastIndexOf('.') + 1)
+        val simpleName: String = qualifiedName.substringAfterLast('.')
 
         return annotations.any {
             it.shortName.getShortName() == simpleName
