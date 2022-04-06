@@ -25,6 +25,8 @@ interface ApplicationContext {
 
     operator fun get(klass: KClass<*>): Any? = components.firstOrNull { it::class.isSubclassOf(klass) }
 
+    operator fun invoke(block: Builder.() -> Unit): ApplicationContext = ApplicationContextImpl.Builder().also(block).build()
+
     interface Builder {
         fun <T : Any> newComponent(block: () -> T): T
 
@@ -33,5 +35,3 @@ interface ApplicationContext {
         fun build(): ApplicationContext
     }
 }
-
-fun buildContext(block: ApplicationContext.Builder.() -> Unit): ApplicationContext = ApplicationContextImpl.Builder().also(block).build()

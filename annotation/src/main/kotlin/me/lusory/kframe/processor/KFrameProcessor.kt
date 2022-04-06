@@ -49,17 +49,18 @@ class KFrameProcessor(private val environment: SymbolProcessorEnvironment) : Sym
 
         val mainBuilder: FunSpec.Builder = FunSpec.builder("main")
             .addParameter("args", ARRAY.parameterizedBy(STRING))
-            .beginControlFlow(
-                "%M",
-                // ClassName("me.lusory.kframe.inject", "ApplicationContext"),
-                MemberName("me.lusory.kframe.inject", "buildContext")
-            )
+            .beginControlFlow("%T", ClassName("me.lusory.kframe.inject", "ApplicationContext"))
 
         val deps: MutableSet<KSFile> = mutableSetOf()
 
         var varCount = 0
-        val vars: MutableMap<String, Pair<String, Boolean>> = mutableMapOf()
-        val backlog: MutableList<Triple<KSClassDeclaration, KSFunctionDeclaration, Boolean>> = mutableListOf()
+        // class name -> [var name, is non-singleton, qualifier]
+        val vars: MutableMap<String, MutableList<Triple<String, Boolean, String?>>> = mutableMapOf(
+            "kotlin.Array" to mutableListOf(
+                Triple("args", false, "args") // args are available for injection with qualifier
+            )
+        )
+        val backlog: MutableList<BacklogItem> = mutableListOf()
 
         resolver.getSymbolsWithAnnotation("me.lusory.kframe.inject.Component")
             .forEach { symbol ->
@@ -78,15 +79,20 @@ class KFrameProcessor(private val environment: SymbolProcessorEnvironment) : Sym
                     environment.logger.info("Processing $symbolClassName...")
 
                     for (param: KSValueParameter in func.parameters) {
+                        val exactType: String? = param.getAnnotationsByType("me.lusory.kframe.inject.Exact")
+                            .firstOrNull()
+                            ?.let { (it.arguments.first { arg -> arg.name?.asString() == "name" }.value as String).nullIfEmpty() }
+
                         val varName: String? = param.type.resolve().declaration.qualifiedName?.asString()
                             ?.let { vars[it] }
+                            ?.let { if (exactType != null) it.firstOrNull { triple -> triple.third == exactType } else it.first() }
                             ?.let { if (it.second) "${it.first}()" else it.first }
 
                         if (varName != null) {
                             params.add(varName)
                         } else {
                             environment.logger.info("Adding $symbolClassName to backlog (unknown parameter).")
-                            backlog.add(Triple(elemDeclaration, func, isNonSingleton))
+                            backlog.add(BacklogItem(elemDeclaration, func, isNonSingleton, exactType))
                             return@forEach
                         }
                     }
@@ -104,7 +110,13 @@ class KFrameProcessor(private val environment: SymbolProcessorEnvironment) : Sym
                             .endControlFlow()
                     }
 
-                    vars[symbolClassName] = Pair(varName, isNonSingleton)
+                    vars.getOrPut(symbolClassName) { mutableListOf() }.add(Triple(
+                        varName,
+                        isNonSingleton,
+                        symbol.getAnnotationsByType("me.lusory.kframe.inject.Component")
+                            .first()
+                            .let { (it.arguments.first { arg -> arg.name?.asString() == "name" }.value as String).nullIfEmpty() }
+                    ))
 
                     environment.logger.info("Processed $symbolClassName.")
                 }
@@ -114,19 +126,21 @@ class KFrameProcessor(private val environment: SymbolProcessorEnvironment) : Sym
             var modified = false
             val iter = backlog.listIterator()
             loop@ while (iter.hasNext()) {
-                val triple = iter.next()
-                val classDeclaration: KSClassDeclaration = triple.first
-
-                val func: KSFunctionDeclaration = triple.second
+                val backlogItem = iter.next()
                 val params: MutableList<String> = mutableListOf()
 
-                val symbolClassName: String = classDeclaration.qualifiedName!!.asString()
+                val symbolClassName: String = backlogItem.classDecl.qualifiedName!!.asString()
 
                 environment.logger.info("Processing $symbolClassName from backlog...")
 
-                for (param: KSValueParameter in func.parameters) {
+                for (param: KSValueParameter in backlogItem.funcDecl.parameters) {
+                    val exactType: String? = param.getAnnotationsByType("me.lusory.kframe.inject.Exact")
+                        .firstOrNull()
+                        ?.let { (it.arguments.first { arg -> arg.name?.asString() == "name" }.value as String).nullIfEmpty() }
+
                     val varName: String? = param.type.resolve().declaration.qualifiedName?.asString()
                         ?.let { vars[it] }
+                        ?.let { if (exactType != null) it.firstOrNull { triple -> triple.third == exactType } else it.first() }
                         ?.let { if (it.second) "${it.first}()" else it.first }
 
                     if (varName != null) {
@@ -136,21 +150,20 @@ class KFrameProcessor(private val environment: SymbolProcessorEnvironment) : Sym
                     }
                 }
 
-                val isNonSingleton = triple.third
                 val varName = "var${varCount++}"
-                if (func.isConstructor()) {
+                if (backlogItem.funcDecl.isConstructor()) {
                     val type: ClassName = ClassName.bestGuess(symbolClassName)
-                    mainBuilder.beginControlFlow(if (isNonSingleton) "val $varName: () -> %T = newComponentProvider" else "val $varName: %T = newComponent", type)
+                    mainBuilder.beginControlFlow(if (backlogItem.isNonSingleton) "val $varName: () -> %T = newComponentProvider" else "val $varName: %T = newComponent", type)
                         .addStatement("%T(${params.joinToString(", ")})", type)
                         .endControlFlow()
                 } else {
-                    val methodType = MemberName(func.packageName.asString(), func.simpleName.asString())
-                    mainBuilder.beginControlFlow(if (isNonSingleton) "val $varName: () -> %T = newComponentProvider" else "val $varName: %T = newComponent", classDeclaration.toClassName())
+                    val methodType = MemberName(backlogItem.funcDecl.packageName.asString(), backlogItem.funcDecl.simpleName.asString())
+                    mainBuilder.beginControlFlow(if (backlogItem.isNonSingleton) "val $varName: () -> %T = newComponentProvider" else "val $varName: %T = newComponent", backlogItem.classDecl.toClassName())
                         .addStatement("%M(${params.joinToString(", ")})", methodType)
                         .endControlFlow()
                 }
 
-                vars[symbolClassName] = Pair(varName, isNonSingleton)
+                vars.getOrPut(symbolClassName) { mutableListOf() }.add(Triple(varName, backlogItem.isNonSingleton, backlogItem.qualifier))
 
                 modified = true
                 iter.remove()
@@ -197,6 +210,24 @@ class KFrameProcessor(private val environment: SymbolProcessorEnvironment) : Sym
         }
     }
 
+    private fun KSAnnotated.getAnnotationsByType(qualifiedName: String): Sequence<KSAnnotation> {
+        val simpleName: String = qualifiedName.substringAfterLast('.')
+
+        return annotations.filter {
+            it.shortName.getShortName() == simpleName
+                    && it.annotationType.resolve().declaration.qualifiedName?.asString() == qualifiedName
+        }
+    }
+
     private fun KSModifierListOwner.isAccessible(): Boolean =
         modifiers.none { it == Modifier.PRIVATE || it == Modifier.PROTECTED || it == Modifier.INTERNAL }
+
+    private fun String.nullIfEmpty(): String? = ifEmpty { null }
+
+    private data class BacklogItem(
+        val classDecl: KSClassDeclaration,
+        val funcDecl: KSFunctionDeclaration,
+        val isNonSingleton: Boolean,
+        val qualifier: String?
+    )
 }

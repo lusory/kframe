@@ -17,7 +17,7 @@
 
 package me.lusory.kframe.inject
 
-@Target(AnnotationTarget.CLASS, AnnotationTarget.FUNCTION)
+@Target(AnnotationTarget.VALUE_PARAMETER)
 @Retention(AnnotationRetention.RUNTIME)
 @MustBeDocumented
-annotation class Component(val name: String = "")
+annotation class Exact(val name: String)
