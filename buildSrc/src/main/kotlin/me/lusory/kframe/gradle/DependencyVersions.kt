@@ -6,4 +6,5 @@ object DependencyVersions {
     const val KOTLINPOET = "1.11.0"
     const val MOCKITO = "4.4.0"
     const val MOCKITO_KT = "4.0.0"
+    const val DOKKA = "1.6.10"
 }

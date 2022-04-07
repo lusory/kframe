@@ -1,8 +1,24 @@
+import org.jetbrains.dokka.gradle.DokkaTask
+import org.jetbrains.dokka.base.DokkaBase
+import org.jetbrains.dokka.base.DokkaBaseConfiguration
+import java.time.Year
+
+buildscript {
+    dependencies {
+        classpath(group = "org.jetbrains.dokka", name = "dokka-base", version = me.lusory.kframe.gradle.DependencyVersions.DOKKA)
+    }
+}
+
 plugins {
     kotlin("jvm") version me.lusory.kframe.gradle.DependencyVersions.KOTLIN apply false
     id("org.cadixdev.licenser") version "0.6.1"
+    id("org.jetbrains.dokka") version me.lusory.kframe.gradle.DependencyVersions.DOKKA
     `maven-publish`
     `java-library`
+}
+
+repositories {
+    mavenCentral() // dokka
 }
 
 allprojects {
@@ -16,6 +32,7 @@ subprojects {
         plugin("maven-publish")
         plugin("org.jetbrains.kotlin.jvm")
         plugin("org.cadixdev.licenser")
+        plugin("org.jetbrains.dokka")
     }
 
     repositories {
@@ -49,5 +66,11 @@ subprojects {
 
     license {
         header(rootProject.file("license_header.txt"))
+    }
+}
+
+tasks.withType<DokkaTask> {
+    pluginConfiguration<DokkaBase, DokkaBaseConfiguration> {
+        footerMessage = "© ${Year.now().value} Copyright lusory contributors"
     }
 }
