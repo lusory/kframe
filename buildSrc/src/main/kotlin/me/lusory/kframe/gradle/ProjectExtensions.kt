@@ -3,9 +3,8 @@ package me.lusory.kframe.gradle
 import org.gradle.api.Project
 import org.gradle.api.publish.PublishingExtension
 import org.gradle.api.publish.maven.MavenPublication
-import org.gradle.kotlin.dsl.configure
-import org.gradle.kotlin.dsl.create
-import org.gradle.kotlin.dsl.get
+import org.gradle.api.tasks.testing.Test
+import org.gradle.kotlin.dsl.*
 
 fun Project.addPublication() {
     configure<PublishingExtension> {
@@ -40,5 +39,23 @@ fun Project.addPublication() {
                 }
             }
         }
+    }
+}
+
+fun Project.enableTests() {
+    dependencies {
+        add("testImplementation", kotlin("reflect"))
+
+        add("testImplementation", kotlin("test"))
+        add("testImplementation", "org.mockito.kotlin:mockito-kotlin:${DependencyVersions.MOCKITO_KT}") {
+            constraints {
+                // bump mockito version
+                add("testImplementation", "org.mockito:mockito-core:${DependencyVersions.MOCKITO}")
+            }
+        }
+    }
+
+    tasks.withType<Test> {
+        useJUnitPlatform()
     }
 }

@@ -19,7 +19,7 @@ interface ArgumentParser {
     val single: String?
         get() = if (isSingle) args.getOrNull(0)?.second else throw RuntimeException("Not a single")
 
-    operator fun get(name: String): String? = args.firstOrNull { it.first == name }?.second
+    operator fun get(vararg names: String): String? = args.firstOrNull { arg -> names.any { arg.first == it } }?.second
 }
 
 @Component(name = "argumentParser")

@@ -9,7 +9,7 @@ internal class ArgumentParserImpl(
     init {
         if (rawArgs.isEmpty()) {
             // do nothing
-        } else if (rawArgs.size == 1) {
+        } else if (rawArgs.size == 1 && !rawArgs[0].startsWith("-")) {
             args.add(null to rawArgs[0].trimQuotes())
         } else {
             var lastArg: String? = null
@@ -21,8 +21,8 @@ internal class ArgumentParserImpl(
                     throw ArgumentParseException("Invalid argument $arg")
                 }
                 arg = when {
-                    arg.startsWith("--") -> arg.substring(3)
-                    arg.startsWith('-') -> arg.substring(2)
+                    arg.startsWith("--") -> arg.substring(2)
+                    arg.startsWith('-') -> arg.substring(1)
                     else -> {
                         if (lastArg == null) {
                             throw ArgumentParseException("Invalid argument $arg")
@@ -44,6 +44,10 @@ internal class ArgumentParserImpl(
                 } else {
                     lastArg = arg
                 }
+            }
+
+            if (lastArg != null) {
+                args.add(lastArg to null)
             }
         }
     }

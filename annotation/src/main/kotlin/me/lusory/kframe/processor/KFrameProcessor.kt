@@ -49,7 +49,7 @@ class KFrameProcessor(private val environment: SymbolProcessorEnvironment) : Sym
 
         val mainBuilder: FunSpec.Builder = FunSpec.builder("main")
             .addParameter("args", ARRAY.parameterizedBy(STRING))
-            .beginControlFlow("%T", ClassName("me.lusory.kframe.inject", "ApplicationContext"))
+            .beginControlFlow("%M", MemberName("me.lusory.kframe.inject", "applicationContext"))
 
         val deps: MutableSet<KSFile> = mutableSetOf()
 

@@ -17,6 +17,7 @@
 
 package me.lusory.kframe.inject
 
+import me.lusory.kframe.util.InternalAPI
 import kotlin.reflect.KClass
 import kotlin.reflect.full.isSubclassOf
 
@@ -24,8 +25,6 @@ interface ApplicationContext {
     val components: Set<Any>
 
     operator fun get(klass: KClass<*>): Any? = components.firstOrNull { it::class.isSubclassOf(klass) }
-
-    operator fun invoke(block: Builder.() -> Unit): ApplicationContext = ApplicationContextImpl.Builder().also(block).build()
 
     interface Builder {
         fun <T : Any> newComponent(block: () -> T): T
@@ -35,3 +34,6 @@ interface ApplicationContext {
         fun build(): ApplicationContext
     }
 }
+
+@InternalAPI // use dependency injection to get a context instance
+fun applicationContext(block: ApplicationContext.Builder.() -> Unit): ApplicationContext = ApplicationContextImpl.Builder().also(block).build()
