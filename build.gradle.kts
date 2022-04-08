@@ -88,7 +88,28 @@ fun Project.applyDokka() {
         pluginConfiguration<VersioningPlugin, VersioningConfiguration> {
             version = project.version as String
             if (this@withType is DokkaMultiModuleTask) {
-                olderVersionsDir = rootProject.file("build/dokka/versioned")
+                olderVersionsDir = rootProject.file("build/dokka/versioned").also { it.mkdirs() }
+
+                rootProject.file("build/dokka/versioned/index.html").writeText(
+                    """
+                        <!DOCTYPE html>
+                        <html>
+                        <head>
+                          <meta charset="utf-8">
+                          <title>Redirecting</title>
+                          <noscript>
+                            <meta http-equiv="refresh" content="1; url=latest/" />
+                          </noscript>
+                          <script>
+                            window.location.replace("$version/" + window.location.hash);
+                          </script>
+                        </head>
+                        <body>
+                          Redirecting to <a href="$version/">$version/</a>...
+                        </body>
+                        </html>
+                    """.trimIndent()
+                )
 
                 outputDirectory.set(rootProject.file("build/dokka/versioned/$version").also { if (it.isDirectory) it.deleteRecursively() })
             }

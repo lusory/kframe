@@ -19,7 +19,6 @@ jobs:
       - name: Prepare older versions
         run: |
           rm -rf build/dokka/versioned
-          mkdir -p build/dokka/versioned
           git clone -b gh-pages https://github.com/lusory/kframe.git build/dokka/versioned || true
           rm -rf build/dokka/versioned/.git
       - name: Grant execute permission for gradlew
@@ -34,3 +33,6 @@ jobs:
         with:
           branch: gh-pages
           folder: build/dokka/versioned
+          git-config-name: github-actions[bot]
+          git-config-email: 41898282+github-actions[bot]@users.noreply.github.com
+          commit-message: 'docs: update with ${{ github.sha }}'
