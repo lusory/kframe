@@ -4,7 +4,7 @@ Root package of kframe, all modules are subpackages of this
 
 # Package me.lusory.kframe.exceptions
 
-kframe-specific exceptions, a part of the core module
+kframe specific exceptions, a part of the core module
 
 # Package me.lusory.kframe.inject
 
