@@ -1,22 +1,22 @@
 # Package me.lusory.kframe
 
-This is the root package of kframe, all modules will be subpackages of this.
+Root package of kframe, all modules are subpackages of this
 
 # Package me.lusory.kframe.exceptions
 
-This is the package with kframe-specific exceptions, a part of the core module.
+kframe-specific exceptions, a part of the core module
 
 # Package me.lusory.kframe.inject
 
-This is the package with the dependency injection API, a part of the core module.
+Dependency injection API, a part of the core module
 
 # Package me.lusory.kframe.util
 
-This is the package with miscellaneous utilities, a part of the core module.
+Miscellaneous utilities, a part of the core module
 
 # Module core
 
-This module serves as a base for an application, carrying the essential classes.
+An application base, carrying the essential classes
 
 ## Features
 - Compile-time dependency injection
@@ -77,3 +77,135 @@ fun testComponent1(argParser: ArgumentParser): TestComponent1 {
 ```
 
 Check out [the tests](https://github.com/lusory/kframe/blob/master/core/src/test/kotlin/me/lusory/kframe/test/ArgumentParserTest.kt) for more in-depth usages.
+
+## Getting started
+
+The basic requirement is the `core` module with the annotation processor from the `annotation` module.
+
+### Gradle
+
+#### Using the plugin
+
+There is a Gradle plugin provided for convenience, you can be up and running in no time.
+
+##### Kotlin DSL
+
+```kotlin
+plugins {
+    id("me.lusory.kframe") version "LATEST_VERSION_HERE"
+    // make sure to also have the kotlin gradle plugin applied
+    kotlin("jvm") version "1.6.20"
+}
+
+repositories {
+    mavenCentral()
+    maven("https://repo.lusory.dev/releases")
+    maven("https://repo.lusory.dev/snapshots")
+}
+
+dependencies {
+    // kotlin-stdlib and kotlin-reflect
+    implementation(kotlin("stdlib"))
+    implementation(kotlin("reflect"))
+}
+
+// optional
+
+kframe {
+    // sets the main class name for generation and in the jar manifest
+    mainFQClassName = "kframe.Main"
+    // or
+    mainPackageName = "kframe"
+    mainClassName = "Main"
+}
+
+// your build logic
+```
+
+##### Groovy DSL
+
+```groovy
+plugins {
+    id 'me.lusory.kframe' version 'LATEST_VERSION_HERE'
+    // make sure to also have the kotlin gradle plugin applied
+    id 'org.jetbrains.kotlin.jvm' version '1.6.20'
+}
+
+repositories {
+    mavenCentral()
+    maven {
+        url 'https://repo.lusory.dev/releases'
+    }
+    maven {
+        url 'https://repo.lusory.dev/snapshots'
+    }
+}
+
+dependencies {
+    // kotlin-stdlib and kotlin-reflect
+    implementation 'org.jetbrains.kotlin:kotlin-stdlib:1.6.20'
+    implementation 'org.jetbrains.kotlin:kotlin-reflect:1.6.20'
+}
+
+// optional
+
+kframe {
+    // sets the main class name for generation and in the jar manifest
+    mainFQClassName = 'kframe.Main'
+    // or
+    mainPackageName = 'kframe'
+    mainClassName = 'Main'
+}
+
+// your build logic
+```
+
+#### Without the plugin
+
+Using the plugin is highly recommended, but you can also do it in plain Gradle.
+
+##### Kotlin DSL
+
+```kotlin
+plugins {
+    id("com.google.devtools.ksp") version "1.6.20-1.0.4" // pick the latest KSP version for your Kotlin version (kotlinver-kspver)
+    // make sure to also have the kotlin gradle plugin applied
+    kotlin("jvm") version "1.6.20"
+}
+
+repositories {
+    mavenCentral()
+    maven("https://repo.lusory.dev/releases")
+    maven("https://repo.lusory.dev/snapshots")
+}
+
+dependencies {
+    implementation("me.lusory.kframe:core:LATEST_VERSION_HERE")
+    ksp("me.lusory.kframe:annotation:LATEST_VERSION_HERE")
+
+    // kotlin-stdlib and kotlin-reflect
+    implementation(kotlin("stdlib"))
+    implementation(kotlin("reflect"))
+}
+
+kotlin {
+    // add a generated folder to each kotlin source set
+    sourceSets.forEach { sourceSet ->
+        sourceSet.kotlin.srcDir("build/generated/ksp/${sourceSet.name}/kotlin")
+    }
+}
+
+tasks.withType<Jar> {
+    manifest {
+        attributes["Main-Class"] = "kframe.Main" // sets the main class (generated) for jar outputs
+    }
+}
+
+// optional
+
+ksp {
+    // sets the main class name for generation
+    arg("packageName", "kframe")
+    arg("className", "Main")
+}
+```
