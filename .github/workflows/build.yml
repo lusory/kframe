@@ -16,6 +16,12 @@ jobs:
           distribution: 'zulu'
           java-version: 8
           cache: 'gradle'
+      - name: Prepare older versions
+        run: |
+          rm -rf build/dokka/versioned
+          mkdir -p build/dokka/versioned
+          git clone -b gh-pages https://github.com/lusory/kframe.git build/dokka/versioned || true
+          rm -rf build/dokka/versioned/.git
       - name: Grant execute permission for gradlew
         run: chmod +x gradlew
       - name: Build with Gradle
@@ -23,11 +29,6 @@ jobs:
         env:
           REPO_USERNAME: ${{ secrets.REPO_USERNAME }}
           REPO_PASSWORD: ${{ secrets.REPO_PASSWORD }}
-      - name: Prepare older versions
-        run: |
-          mkdir -p build/dokka/versioned
-          git clone -b gh-pages https://github.com/lusory/kframe.git build/dokka/versioned || true
-          rm -rf build/dokka/versioned/.git
       - name: Publish documentation
         uses: JamesIves/github-pages-deploy-action@v4.3.0
         with:
