@@ -17,6 +17,9 @@
 
 package me.lusory.kframe.inject
 
+/**
+ *
+ */
 @Target(AnnotationTarget.CLASS, AnnotationTarget.FUNCTION)
 @Retention(AnnotationRetention.RUNTIME)
 @MustBeDocumented

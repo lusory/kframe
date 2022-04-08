@@ -21,14 +21,10 @@ import me.lusory.kframe.exceptions.ArgumentParseException
 
 internal class ArgumentParserImpl(
     rawArgs: Array<String>,
-    override val args: MutableList<Pair<String?, String?>> = mutableListOf()
+    override val args: MutableList<Pair<String, String?>> = mutableListOf()
 ) : ArgumentParser {
     init {
-        if (rawArgs.isEmpty()) {
-            // do nothing
-        } else if (rawArgs.size == 1 && !rawArgs[0].startsWith("-")) {
-            args.add(null to rawArgs[0].trimQuotes())
-        } else {
+        if (rawArgs.isNotEmpty()) {
             var lastArg: String? = null
 
             for (arg0: String in rawArgs) {
@@ -68,6 +64,6 @@ internal class ArgumentParserImpl(
             }
         }
     }
-}
 
-fun String.trimQuotes(): String = trim('\'', '"')
+    private fun String.trimQuotes(): String = trim('\'', '"')
+}

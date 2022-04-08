@@ -1,11 +1,13 @@
-import org.jetbrains.dokka.gradle.DokkaTask
-import org.jetbrains.dokka.base.DokkaBase
-import org.jetbrains.dokka.base.DokkaBaseConfiguration
+import org.jetbrains.dokka.gradle.AbstractDokkaLeafTask
+import org.jetbrains.dokka.gradle.AbstractDokkaTask
+import org.jetbrains.dokka.gradle.DokkaMultiModuleTask
+import org.jetbrains.dokka.versioning.VersioningConfiguration
+import org.jetbrains.dokka.versioning.VersioningPlugin
 import java.time.Year
 
 buildscript {
     dependencies {
-        classpath(group = "org.jetbrains.dokka", name = "dokka-base", version = me.lusory.kframe.gradle.DependencyVersions.DOKKA)
+        classpath(group = "org.jetbrains.dokka", name = "versioning-plugin", version = me.lusory.kframe.gradle.DependencyVersions.DOKKA)
     }
 }
 
@@ -67,10 +69,43 @@ subprojects {
     license {
         header(rootProject.file("license_header.txt"))
     }
+
+    applyDokka()
 }
 
-tasks.withType<DokkaTask> {
-    pluginConfiguration<DokkaBase, DokkaBaseConfiguration> {
-        footerMessage = "© ${Year.now().value} Copyright lusory contributors"
+applyDokka()
+
+fun Project.applyDokka() {
+    dependencies {
+        dokkaPlugin(group = "org.jetbrains.dokka", name = "versioning-plugin", version = me.lusory.kframe.gradle.DependencyVersions.DOKKA)
+    }
+
+    tasks.withType<AbstractDokkaTask> {
+        pluginsMapConfiguration.set(mapOf(
+            "org.jetbrains.dokka.base.DokkaBase" to """{ "footerMessage": "© ${Year.now().value} Copyright lusory contributors" }"""
+        ))
+
+        pluginConfiguration<VersioningPlugin, VersioningConfiguration> {
+            version = project.version as String
+            if (this@withType is DokkaMultiModuleTask) {
+                olderVersionsDir = rootProject.file("build/dokka/versioned")
+            }
+        }
+
+        outputDirectory.set(rootProject.file("build/dokka/versioned/${version as String}").also { if (it.isDirectory) it.deleteRecursively() })
+    }
+
+    if (rootProject != this@applyDokka) {
+        tasks.withType<AbstractDokkaLeafTask> {
+            dokkaSourceSets.configureEach {
+                includes.fromIfExists(this@applyDokka, "src/dokka-symbols.md")
+            }
+        }
+    }
+}
+
+fun ConfigurableFileCollection.fromIfExists(project: Project, vararg paths: Any) {
+    if (paths.all { project.file(it).isFile }) {
+        from(paths)
     }
 }

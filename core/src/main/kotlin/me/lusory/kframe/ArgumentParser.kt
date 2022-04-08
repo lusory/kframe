@@ -21,24 +21,47 @@ import me.lusory.kframe.inject.Component
 import me.lusory.kframe.inject.Exact
 import me.lusory.kframe.util.InternalAPI
 
+/**
+ * A command line argument parsing API.
+ *
+ * Instances are immutable.
+ *
+ * See the documentation [here](https://docs.lusory.dev/kframe/latest/modules/core/#argument-parsing).
+ *
+ * @author zlataovce
+ * @since 0.0.1
+ */
 interface ArgumentParser {
-    val args: List<Pair<String?, String?>>
+    /**
+     * A [List] of option name - value pairs.
+     *
+     * The pair value can be null, only if the option has no specified value.
+     */
+    val args: List<Pair<String, String?>>
 
+    /**
+     * The amount of parsed option name - value pairs.
+     */
     val size: Int
         get() = args.size
 
+    /**
+     * Were any arguments processed?
+     */
     val isEmpty: Boolean
         get() = args.isEmpty()
 
-    val isSingle: Boolean
-        get() = (isEmpty || size == 1) && args.getOrNull(0)?.first == null
-
-    val single: String?
-        get() = if (isSingle) args.getOrNull(0)?.second else throw RuntimeException("Not a single")
-
+    /**
+     * Gets the value of the first option whose name matches one of the supplied names.
+     */
     operator fun get(vararg names: String): String? = args.firstOrNull { arg -> names.any { arg.first == it } }?.second
 }
 
+/**
+ * Provides an [ArgumentParser] instance for dependency injection. Should **not** be called manually.
+ *
+ * @suppress API for internal use
+ */
 @Component(name = "argumentParser")
 @InternalAPI // use dependency injection to get this instance
 fun argumentParser(@Exact(name = "args") args: Array<String>): ArgumentParser = ArgumentParserImpl(args)
