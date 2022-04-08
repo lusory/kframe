@@ -89,10 +89,10 @@ fun Project.applyDokka() {
             version = project.version as String
             if (this@withType is DokkaMultiModuleTask) {
                 olderVersionsDir = rootProject.file("build/dokka/versioned")
+
+                outputDirectory.set(rootProject.file("build/dokka/versioned/$version").also { if (it.isDirectory) it.deleteRecursively() })
             }
         }
-
-        outputDirectory.set(rootProject.file("build/dokka/versioned/${version as String}").also { if (it.isDirectory) it.deleteRecursively() })
     }
 
     if (rootProject != this@applyDokka) {
