@@ -23,7 +23,7 @@ jobs:
       - name: Grant execute permission for gradlew
         run: chmod +x gradlew
       - name: Publish JAR with Gradle
-        if: !startsWith(github.event.head_commit.message, 'docs')
+        if: "!startsWith(github.event.head_commit.message, 'docs')"
         run: ./gradlew publish
         env:
           REPO_USERNAME: ${{ secrets.REPO_USERNAME }}
