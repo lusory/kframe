@@ -1,0 +1,13 @@
+$dokka.format:html-v1
+$dokka.linkExtension:html
+
+module:annotation
+me.lusory.kframe.processor
+me.lusory.kframe.processor.exceptions
+module:core
+me.lusory.kframe
+me.lusory.kframe.exceptions
+me.lusory.kframe.inject
+me.lusory.kframe.util
+module:plugin
+me.lusory.kframe.gradle.plugin
