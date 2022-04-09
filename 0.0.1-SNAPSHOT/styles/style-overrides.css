@@ -1,0 +1,3 @@
+.library-name a::before {
+    top: -15px !important;
+}
