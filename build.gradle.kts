@@ -84,7 +84,7 @@ fun Project.applyDokka() {
         pluginsMapConfiguration.set(mapOf(
             "org.jetbrains.dokka.base.DokkaBase" to """{
                 "footerMessage": "© ${Year.now().value} Copyright lusory contributors",
-                "customStyleSheets": ["${rootProject.file("assets/logo-styles.css").absolutePath}"]
+                "customAssets": ["${rootProject.file("assets/logo-icon.svg").absolutePath}"]
             }""".trimIndent()
         ))
 
