@@ -26,8 +26,6 @@ import me.lusory.kframe.util.InternalAPI
  *
  * Instances are immutable.
  *
- * See the documentation [here](https://docs.lusory.dev/kframe/latest/modules/core/#argument-parsing).
- *
  * @author zlataovce
  * @since 0.0.1
  */
@@ -53,6 +51,9 @@ interface ArgumentParser {
 
     /**
      * Gets the value of the first option whose name matches one of the supplied names.
+     *
+     * @param names the possible option names (e.g. a long and a short name)
+     * @return the option value, null if no value was supplied
      */
     operator fun get(vararg names: String): String? = args.firstOrNull { arg -> names.any { arg.first == it } }?.second
 }
@@ -60,6 +61,8 @@ interface ArgumentParser {
 /**
  * Provides an [ArgumentParser] instance for dependency injection. Should **not** be called manually.
  *
+ * @param args the application arguments from the `main` function
+ * @return the [ArgumentParser] instance
  * @suppress API for internal use
  */
 @Component(name = "argumentParser")

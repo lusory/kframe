@@ -42,9 +42,13 @@ internal class ApplicationContextImpl(override val components: MutableSet<Any>) 
 
     internal class Builder : ApplicationContext.Builder {
         private val components: MutableSet<Any> = mutableSetOf()
+        private var afterBuildHook: ((ApplicationContext) -> Unit)? = null
 
         override fun <T : Any> newComponent(block: () -> T): T = block().also { components.add(it) }
+        override fun afterBuild(block: (ApplicationContext) -> Unit) {
+            afterBuildHook = block
+        }
 
-        override fun build(): ApplicationContextImpl = ApplicationContextImpl(components.toMutableSet())
+        override fun build(): ApplicationContextImpl = ApplicationContextImpl(components.toMutableSet()).also { afterBuildHook?.invoke(it) }
     }
 }

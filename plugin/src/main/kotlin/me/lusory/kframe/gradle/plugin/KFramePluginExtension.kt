@@ -17,13 +17,41 @@
 
 package me.lusory.kframe.gradle.plugin
 
+/**
+ * A configuration extension for the KFrame Gradle plugin.
+ *
+ * Example:
+ * ```kt
+ * kframe {
+ *     // sets the main class name for generation and in the jar manifest
+ *     mainFQClassName = "kframe.Main"
+ *     // or
+ *     mainPackageName = "kframe"
+ *     mainClassName = "Main"
+ * }
+ * ```
+ *
+ * @author zlataovce
+ * @since 0.0.1
+ */
 abstract class KFramePluginExtension {
+    /**
+     * The fully qualified class name of the generated main class (e.g. kframe.Main).
+     */
     var mainFQClassName: String
         get() = "${mainPackageName}.${mainClassName}"
         set(value) {
             mainPackageName = value.substringBeforeLast('.')
             mainClassName = value.substringAfterLast('.')
         }
+
+    /**
+     * The package name of the generated main class (e.g. kframe).
+     */
     var mainPackageName: String = "kframe"
+
+    /**
+     * The simple class name of the generated main class (e.g. Main).
+     */
     var mainClassName: String = "Main"
 }

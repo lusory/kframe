@@ -17,4 +17,12 @@
 
 package me.lusory.kframe.processor.exceptions
 
-open class DependencyResolveException(message: String) : Exception(message)
+/**
+ * An exception signifying that a dependency could not be resolved.
+ *
+ * @param message the exception message
+ *
+ * @author zlataovce
+ * @since 0.0.1
+ */
+class DependencyResolveException(message: String) : Exception(message)

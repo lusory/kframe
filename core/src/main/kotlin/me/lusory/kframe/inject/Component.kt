@@ -17,6 +17,14 @@
 
 package me.lusory.kframe.inject
 
+/**
+ * Marks a class or a top-level function as a candidate for dependency injection.
+ *
+ * @param name the component name, optional
+ *
+ * @author zlataovce
+ * @since 0.0.1
+ */
 @Target(AnnotationTarget.CLASS, AnnotationTarget.FUNCTION)
 @Retention(AnnotationRetention.RUNTIME)
 @MustBeDocumented

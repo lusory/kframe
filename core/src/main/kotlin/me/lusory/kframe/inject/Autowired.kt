@@ -17,7 +17,13 @@
 
 package me.lusory.kframe.inject
 
-@Target(AnnotationTarget.CLASS, AnnotationTarget.FUNCTION)
+/**
+ * Marks a constructor as eligible for dependency injection, useful when a class has multiple constructors.
+ *
+ * @author zlataovce
+ * @since 0.0.1
+ */
+@Target(AnnotationTarget.CONSTRUCTOR)
 @Retention(AnnotationRetention.RUNTIME)
 @MustBeDocumented
 annotation class Autowired

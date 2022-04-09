@@ -32,6 +32,14 @@ import com.squareup.kotlinpoet.ksp.toClassName
 import com.squareup.kotlinpoet.ksp.writeTo
 import me.lusory.kframe.processor.exceptions.DependencyResolveException
 
+/**
+ * The annotation processor for dependency injection.
+ *
+ * @param environment the processor environment, passed down from the provider
+ *
+ * @author zlataovce
+ * @since 0.0.1
+ */
 @OptIn(KotlinPoetKspPreview::class)
 class KFrameProcessor(private val environment: SymbolProcessorEnvironment) : SymbolProcessor {
     private var invoked: Boolean = false
@@ -176,6 +184,50 @@ class KFrameProcessor(private val environment: SymbolProcessorEnvironment) : Sym
                     backlog.joinToString(", ")
                 }")
             }
+        }
+
+        val contextInitializers: Sequence<KSAnnotated> = resolver.getSymbolsWithAnnotation("me.lusory.kframe.inject.ContextInitializer")
+
+        if (contextInitializers.count() > 0) {
+            mainBuilder.beginControlFlow("afterBuild { context ->")
+
+            contextInitializers.forEach { symbol ->
+                if (symbol is KSFunctionDeclaration) {
+                    if (symbol.functionKind == FunctionKind.TOP_LEVEL) {
+                        val memberName = MemberName(symbol.packageName.asString(), symbol.simpleName.asString())
+                        if (symbol.parameters.size == 1 && symbol.parameters[0].type.resolve().declaration.qualifiedName?.asString() == "me.lusory.kframe.inject.ApplicationContext") {
+                            mainBuilder.addStatement("%M(context)", memberName)
+                        } else if (symbol.parameters.isEmpty()) {
+                            mainBuilder.addStatement("%M()", memberName)
+                        } else {
+                            throw IllegalArgumentException("@ContextInitializer annotated methods must accept zero parameters or only one of type ApplicationContext")
+                        }
+                    } else if (symbol.functionKind == FunctionKind.MEMBER) {
+                        val parentClassName: String = (symbol.parentDeclaration as? KSClassDeclaration)!!.qualifiedName!!.asString()
+                        val memberVars = vars[parentClassName]
+                            ?.filter { !it.second } // filter non-singletons
+
+                        if (memberVars == null) {
+                            environment.logger.warn("Context initializer method ${symbol.simpleName} found for non-component type $parentClassName")
+                            return@forEach
+                        }
+
+                        for (memberVar in memberVars) {
+                            if (symbol.parameters.size == 1 && symbol.parameters[0].type.resolve().declaration.qualifiedName?.asString() == "me.lusory.kframe.inject.ApplicationContext") {
+                                mainBuilder.addStatement("${memberVar.first}.${symbol.simpleName}(context)")
+                            } else if (symbol.parameters.isEmpty()) {
+                                mainBuilder.addStatement("${memberVar.first}.${symbol.simpleName}()")
+                            } else {
+                                throw IllegalArgumentException("@ContextInitializer annotated methods must accept zero parameters or only one of type ApplicationContext")
+                            }
+                        }
+                    } else {
+                        throw UnsupportedOperationException("Only top-level or component member functions can be annotated with @ContextInitializer")
+                    }
+                }
+            }
+
+            mainBuilder.endControlFlow()
         }
 
         mainBuilder.endControlFlow()

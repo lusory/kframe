@@ -25,6 +25,12 @@ import org.gradle.api.Project
 import org.gradle.jvm.tasks.Jar
 import org.jetbrains.kotlin.gradle.dsl.KotlinJvmProjectExtension
 
+/**
+ * The KFrame Gradle plugin main class, instantiated via the Java Service Loader API.
+ *
+ * @author zlataovce
+ * @since 0.0.1
+ */
 class KFramePlugin : Plugin<Project> {
     override fun apply(target: Project) {
         val extension: KFramePluginExtension = target.extensions.create("kframe", KFramePluginExtension::class.java)

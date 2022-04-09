@@ -17,4 +17,12 @@
 
 package me.lusory.kframe.exceptions
 
+/**
+ * An exception signifying that one or more arguments could not be parsed.
+ *
+ * @param message the exception message
+ *
+ * @author zlataovce
+ * @since 0.0.1
+ */
 class ArgumentParseException(message: String) : Exception(message)

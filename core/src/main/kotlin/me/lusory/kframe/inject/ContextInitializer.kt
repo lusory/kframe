@@ -18,14 +18,12 @@
 package me.lusory.kframe.inject
 
 /**
- * Forces retrieval of a specific component by its name (qualifier).
- *
- * @param name the component qualifier
+ * Marks a top-level function or a class method to run after context has been populated.
  *
  * @author zlataovce
  * @since 0.0.1
  */
-@Target(AnnotationTarget.VALUE_PARAMETER)
+@Target(AnnotationTarget.FUNCTION)
 @Retention(AnnotationRetention.RUNTIME)
 @MustBeDocumented
-annotation class Exact(val name: String)
+annotation class ContextInitializer
