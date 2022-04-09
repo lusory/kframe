@@ -82,7 +82,10 @@ fun Project.applyDokka() {
 
     tasks.withType<AbstractDokkaTask> {
         pluginsMapConfiguration.set(mapOf(
-            "org.jetbrains.dokka.base.DokkaBase" to """{ "footerMessage": "© ${Year.now().value} Copyright lusory contributors" }"""
+            "org.jetbrains.dokka.base.DokkaBase" to """{
+                "footerMessage": "© ${Year.now().value} Copyright lusory contributors",
+                "customStyleSheets": ["${rootProject.file("assets/logo-styles.css").absolutePath}"]
+            }""".trimIndent()
         ))
 
         pluginConfiguration<VersioningPlugin, VersioningConfiguration> {
