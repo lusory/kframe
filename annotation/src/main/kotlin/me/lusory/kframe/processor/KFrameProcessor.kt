@@ -70,6 +70,48 @@ class KFrameProcessor(private val environment: SymbolProcessorEnvironment) : Sym
         )
         val backlog: MutableList<BacklogItem> = mutableListOf()
 
+        // TODO: replace with https://github.com/google/ksp/issues/431
+        val members: List<String> = (environment.options["injectMembers"] ?: "").split(',').toMutableList().apply { if (size == 1 && get(0).isEmpty()) clear() }
+        for (member: String in members) {
+            environment.logger.info("Processing foreign top-level function declaration $member...")
+
+            resolver.getFunctionDeclarationsByName(resolver.getKSNameFromString(member), includeTopLevel = true)
+                .forEach { symbol ->
+                    if (symbol.functionKind == FunctionKind.TOP_LEVEL) {
+                        backlog.add(
+                            BacklogItem(
+                                symbol.returnType!!.resolve().declaration as KSClassDeclaration,
+                                symbol,
+                                symbol.isAnnotationPresent("me.lusory.kframe.inject.NonSingleton"),
+                                symbol.getAnnotationsByType("me.lusory.kframe.inject.Component")
+                                    .first()
+                                    .let { (it.arguments.first { arg -> arg.name?.asString() == "name" }.value as String).nullIfEmpty() }
+                            )
+                        )
+                    }
+                }
+        }
+
+        // TODO: replace with https://github.com/google/ksp/issues/431
+        val classes: List<String> = (environment.options["injectClasses"] ?: "").split(',').toMutableList().apply { if (size == 1 && get(0).isEmpty()) clear() }
+        for (klass: String in classes) {
+            environment.logger.info("Processing foreign class declaration $klass...")
+
+            val symbol: KSClassDeclaration = resolver.getClassDeclarationByName(resolver.getKSNameFromString(klass))
+                ?: throw RuntimeException("Could not resolve component $klass")
+
+            backlog.add(
+                BacklogItem(
+                    symbol,
+                    selectConstructor(symbol),
+                    symbol.isAnnotationPresent("me.lusory.kframe.inject.NonSingleton"),
+                    symbol.getAnnotationsByType("me.lusory.kframe.inject.Component")
+                        .first()
+                        .let { (it.arguments.first { arg -> arg.name?.asString() == "name" }.value as String).nullIfEmpty() }
+                )
+            )
+        }
+
         resolver.getSymbolsWithAnnotation("me.lusory.kframe.inject.Component")
             .forEach { symbol ->
                 if (((symbol is KSClassDeclaration && symbol.classKind == ClassKind.CLASS) || (symbol is KSFunctionDeclaration && symbol.functionKind == FunctionKind.TOP_LEVEL)) && (symbol as KSModifierListOwner).isAccessible()) {

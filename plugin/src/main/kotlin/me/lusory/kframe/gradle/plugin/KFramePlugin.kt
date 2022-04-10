@@ -26,6 +26,8 @@ import org.gradle.jvm.tasks.Jar
 import org.jetbrains.kotlin.gradle.dsl.KotlinJvmProjectExtension
 import org.jetbrains.kotlin.gradle.plugin.KotlinPlatformJvmPlugin
 import org.jetbrains.kotlin.gradle.plugin.getKotlinPluginVersion
+import java.util.*
+import java.util.zip.ZipFile
 
 /**
  * The KFrame Gradle plugin main class, instantiated via the Java Service Loader API.
@@ -70,6 +72,28 @@ class KFramePlugin : Plugin<Project> {
         target.tasks.withType(Jar::class.java) { jar ->
             jar.manifest { manifest ->
                 manifest.attributes["Main-Class"] = extension.mainFQClassName
+            }
+        }
+
+        // TODO: replace with https://github.com/google/ksp/issues/431
+        target.afterEvaluate {
+            val members: MutableSet<String> = mutableSetOf()
+            val classes: MutableSet<String> = mutableSetOf()
+            target.configurations.getByName("compileClasspath").resolvedConfiguration.resolvedArtifacts.forEach { artifact ->
+                ZipFile(artifact.file).use { zipFile ->
+                    zipFile.entries().iterator().forEach { entry ->
+                        if (entry.name.substringAfterLast('/') == "kframe.properties") {
+                            val props: Properties = Properties().also { it.load(zipFile.getInputStream(entry)) }
+                            members.addAll((props["inject.members"] as? String ?: "").split(','))
+                            classes.addAll((props["inject.classes"] as? String ?: "").split(','))
+                        }
+                    }
+                }
+            }
+
+            target.extensions.configure(KspExtension::class.java) { ext ->
+                ext.arg("injectMembers", members.joinToString(","))
+                ext.arg("injectClasses", classes.joinToString(","))
             }
         }
     }

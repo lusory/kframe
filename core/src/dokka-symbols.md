@@ -195,6 +195,27 @@ tasks.withType<Jar> {
     }
 }
 
+afterEvaluate {
+    val members: MutableSet<String> = mutableSetOf()
+    val classes: MutableSet<String> = mutableSetOf()
+    configurations.getByName("compileClasspath").resolvedConfiguration.resolvedArtifacts.forEach { artifact ->
+        ZipFile(artifact.file).use { zipFile ->
+            zipFile.entries().iterator().forEach { entry ->
+                if (entry.name.substringAfterLast('/') == "kframe.properties") {
+                    val props: Properties = Properties().also { it.load(zipFile.getInputStream(entry)) }
+                    members.addAll((props["inject.members"] as? String ?: "").split(','))
+                    classes.addAll((props["inject.classes"] as? String ?: "").split(','))
+                }
+            }
+        }
+    }
+
+    ksp {
+        arg("injectMembers", members.joinToString(","))
+        arg("injectClasses", classes.joinToString(","))
+    }
+}
+
 // optional
 
 ksp {
