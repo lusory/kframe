@@ -103,12 +103,6 @@ repositories {
     maven("https://repo.lusory.dev/snapshots")
 }
 
-dependencies {
-    // kotlin-stdlib and kotlin-reflect
-    implementation(kotlin("stdlib"))
-    implementation(kotlin("reflect"))
-}
-
 // optional
 
 kframe {
@@ -117,6 +111,9 @@ kframe {
     // or
     mainPackageName = "kframe"
     mainClassName = "Main"
+
+    // should kotlin-stdlib and kotlin-reflect be applied to the project automatically (implementation)?
+    applyKotlin = true
 }
 
 // your build logic
@@ -141,12 +138,6 @@ repositories {
     }
 }
 
-dependencies {
-    // kotlin-stdlib and kotlin-reflect
-    implementation 'org.jetbrains.kotlin:kotlin-stdlib:1.6.20'
-    implementation 'org.jetbrains.kotlin:kotlin-reflect:1.6.20'
-}
-
 // optional
 
 kframe {
@@ -155,6 +146,9 @@ kframe {
     // or
     mainPackageName = 'kframe'
     mainClassName = 'Main'
+
+    // should kotlin-stdlib and kotlin-reflect be applied to the project automatically (implementation)?
+    applyKotlin = true
 }
 
 // your build logic
@@ -167,8 +161,10 @@ Using the plugin is highly recommended, but you can also do it in plain Gradle.
 ##### Kotlin DSL
 
 ```kotlin
+import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
+
 plugins {
-    id("com.google.devtools.ksp") version "1.6.20-1.0.4" // pick the latest KSP version for your Kotlin version (kotlinver-kspver)
+    id("com.google.devtools.ksp") version "1.6.20-1.0.5" // pick the latest KSP version for your Kotlin version (kotlinver-kspver)
     // make sure to also have the kotlin gradle plugin applied
     kotlin("jvm") version "1.6.20"
 }
@@ -198,6 +194,32 @@ kotlin {
 tasks.withType<Jar> {
     manifest {
         attributes["Main-Class"] = "kframe.Main" // sets the main class (generated) for jar outputs
+    }
+}
+
+tasks.getByName("compileKotlin") {
+    val task = this as KotlinCompile
+
+    val members: MutableSet<String> = mutableSetOf()
+    val classes: MutableSet<String> = mutableSetOf()
+    task.classpath.forEach { file ->
+        if (file.extension == "jar") {
+            ZipFile(file).use { zipFile ->
+                zipFile.entries().iterator().forEach { entry ->
+                    if (entry.name.substringAfterLast('/') == "kframe.properties") {
+                        val props: Properties = Properties().also { it.load(zipFile.getInputStream(entry)) }
+
+                        members.addAll((props["members"] as? String ?: "").split(','))
+                        classes.addAll((props["classes"] as? String ?: "").split(','))
+                    }
+                }
+            }
+        }
+    }
+
+    ksp {
+        arg("members", members.joinToString(","))
+        arg("classes", classes.joinToString(","))
     }
 }
 

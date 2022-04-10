@@ -24,6 +24,11 @@ import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.jvm.tasks.Jar
 import org.jetbrains.kotlin.gradle.dsl.KotlinJvmProjectExtension
+import org.jetbrains.kotlin.gradle.plugin.KotlinPlatformJvmPlugin
+import org.jetbrains.kotlin.gradle.plugin.getKotlinPluginVersion
+import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
+import java.util.Properties
+import java.util.zip.ZipFile
 
 /**
  * The KFrame Gradle plugin main class, instantiated via the Java Service Loader API.
@@ -42,22 +47,59 @@ class KFramePlugin : Plugin<Project> {
             ext.arg("className", extension.mainClassName)
         }
 
-        target.dependencies.add("implementation", "me.lusory.kframe:core:${BuildInfo.VERSION}")
-        target.dependencies.add("ksp", "me.lusory.kframe:annotation:${BuildInfo.VERSION}")
-
         try {
+            if (!target.pluginManager.hasPlugin("org.jetbrains.kotlin.jvm")) {
+                target.pluginManager.apply(KotlinPlatformJvmPlugin::class.java)
+            }
+
             target.extensions.configure(KotlinJvmProjectExtension::class.java) {
                 it.sourceSets.forEach { sourceSet ->
                     sourceSet.kotlin.srcDir("build/generated/ksp/${sourceSet.name}/kotlin")
                 }
             }
+
+            if (extension.applyKotlin) {
+                val kotlinVersion: String = target.getKotlinPluginVersion()
+                target.dependencies.add("implementation", "org.jetbrains.kotlin:kotlin-stdlib:$kotlinVersion")
+                target.dependencies.add("implementation", "org.jetbrains.kotlin:kotlin-reflect:$kotlinVersion")
+            }
         } catch (ignored: NoClassDefFoundError) {
             throw RuntimeException("The Kotlin Gradle plugin needs to be available on the classpath for KFrame to work!")
         }
 
+        target.dependencies.add("implementation", "me.lusory.kframe:core:${BuildInfo.VERSION}")
+        target.dependencies.add("ksp", "me.lusory.kframe:annotation:${BuildInfo.VERSION}")
+
         target.tasks.withType(Jar::class.java) { jar ->
             jar.manifest { manifest ->
                 manifest.attributes["Main-Class"] = extension.mainFQClassName
+            }
+        }
+
+        // TODO: replace this with https://github.com/google/ksp/issues/431
+        target.tasks.getByName("compileKotlin") { task0 ->
+            val task = task0 as KotlinCompile
+
+            val members: MutableSet<String> = mutableSetOf()
+            val classes: MutableSet<String> = mutableSetOf()
+            task.classpath.forEach { file ->
+                if (file.extension == "jar") {
+                    ZipFile(file).use { zipFile ->
+                        zipFile.entries().iterator().forEach { entry ->
+                            if (entry.name.substringAfterLast('/') == "kframe.properties") {
+                                val props: Properties = Properties().also { it.load(zipFile.getInputStream(entry)) }
+
+                                members.addAll((props["members"] as? String ?: "").split(','))
+                                classes.addAll((props["classes"] as? String ?: "").split(','))
+                            }
+                        }
+                    }
+                }
+            }
+
+            target.extensions.configure(KspExtension::class.java) { ext ->
+                ext.arg("members", members.joinToString(","))
+                ext.arg("classes", classes.joinToString(","))
             }
         }
     }

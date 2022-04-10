@@ -28,6 +28,9 @@ package me.lusory.kframe.gradle.plugin
  *     // or
  *     mainPackageName = "kframe"
  *     mainClassName = "Main"
+ *
+ *     // should kotlin-stdlib and kotlin-reflect be applied to the project automatically (implementation)?
+ *     applyKotlin = true
  * }
  * ```
  *
@@ -54,4 +57,9 @@ abstract class KFramePluginExtension {
      * The simple class name of the generated main class (e.g. Main).
      */
     var mainClassName: String = "Main"
+
+    /**
+     * Should kotlin-stdlib and kotlin-reflect be applied to the project automatically (implementation)?
+     */
+    var applyKotlin: Boolean = true
 }
