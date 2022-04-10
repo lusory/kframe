@@ -19,7 +19,6 @@ package me.lusory.kframe.gradle.plugin
 
 import com.google.devtools.ksp.gradle.KspExtension
 import com.google.devtools.ksp.gradle.KspGradleSubplugin
-import com.google.devtools.ksp.gradle.KspTaskJvm
 import me.lusory.kframe.gradle.BuildInfo
 import org.gradle.api.Plugin
 import org.gradle.api.Project
@@ -27,9 +26,6 @@ import org.gradle.jvm.tasks.Jar
 import org.jetbrains.kotlin.gradle.dsl.KotlinJvmProjectExtension
 import org.jetbrains.kotlin.gradle.plugin.KotlinPlatformJvmPlugin
 import org.jetbrains.kotlin.gradle.plugin.getKotlinPluginVersion
-import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
-import java.util.Properties
-import java.util.zip.ZipFile
 
 /**
  * The KFrame Gradle plugin main class, instantiated via the Java Service Loader API.
@@ -74,37 +70,6 @@ class KFramePlugin : Plugin<Project> {
         target.tasks.withType(Jar::class.java) { jar ->
             jar.manifest { manifest ->
                 manifest.attributes["Main-Class"] = extension.mainFQClassName
-            }
-        }
-
-        target.tasks.withType(KspTaskJvm::class.java) { kspTask ->
-            kspTask.doFirst { _ ->
-                // TODO: replace this with https://github.com/google/ksp/issues/431
-                target.tasks.getByName("compileKotlin") { task0 ->
-                    val task = task0 as KotlinCompile
-
-                    val members: MutableSet<String> = mutableSetOf()
-                    val classes: MutableSet<String> = mutableSetOf()
-                    task.classpath.forEach { file ->
-                        if (file.extension == "jar") {
-                            ZipFile(file).use { zipFile ->
-                                zipFile.entries().iterator().forEach { entry ->
-                                    if (entry.name.substringAfterLast('/') == "kframe.properties") {
-                                        val props: Properties = Properties().also { it.load(zipFile.getInputStream(entry)) }
-
-                                        members.addAll((props["members"] as? String ?: "").split(','))
-                                        classes.addAll((props["classes"] as? String ?: "").split(','))
-                                    }
-                                }
-                            }
-                        }
-                    }
-
-                    target.extensions.configure(KspExtension::class.java) { ext ->
-                        ext.arg("members", members.joinToString(","))
-                        ext.arg("classes", classes.joinToString(","))
-                    }
-                }
             }
         }
     }

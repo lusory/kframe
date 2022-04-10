@@ -70,40 +70,6 @@ class KFrameProcessor(private val environment: SymbolProcessorEnvironment) : Sym
         )
         val backlog: MutableList<BacklogItem> = mutableListOf()
 
-        for (member: String in (environment.options["members"] ?: "").split(',')) {
-            resolver.getFunctionDeclarationsByName(resolver.getKSNameFromString(member), includeTopLevel = true)
-                .forEach { symbol ->
-                    if (symbol.functionKind == FunctionKind.TOP_LEVEL) {
-                        backlog.add(
-                            BacklogItem(
-                                symbol.returnType!!.resolve().declaration as KSClassDeclaration,
-                                symbol,
-                                symbol.isAnnotationPresent("me.lusory.kframe.inject.NonSingleton"),
-                                symbol.getAnnotationsByType("me.lusory.kframe.inject.Component")
-                                    .first()
-                                    .let { (it.arguments.first { arg -> arg.name?.asString() == "name" }.value as String).nullIfEmpty() }
-                            )
-                        )
-                    }
-                }
-        }
-
-        for (klass: String in (environment.options["classes"] ?: "").split(',')) {
-            val symbol: KSClassDeclaration = resolver.getClassDeclarationByName(resolver.getKSNameFromString(klass))
-                ?: throw RuntimeException("Could not resolve component $klass")
-
-            backlog.add(
-                BacklogItem(
-                    symbol,
-                    selectConstructor(symbol),
-                    symbol.isAnnotationPresent("me.lusory.kframe.inject.NonSingleton"),
-                    symbol.getAnnotationsByType("me.lusory.kframe.inject.Component")
-                        .first()
-                        .let { (it.arguments.first { arg -> arg.name?.asString() == "name" }.value as String).nullIfEmpty() }
-                )
-            )
-        }
-
         resolver.getSymbolsWithAnnotation("me.lusory.kframe.inject.Component")
             .forEach { symbol ->
                 if (((symbol is KSClassDeclaration && symbol.classKind == ClassKind.CLASS) || (symbol is KSFunctionDeclaration && symbol.functionKind == FunctionKind.TOP_LEVEL)) && (symbol as KSModifierListOwner).isAccessible()) {

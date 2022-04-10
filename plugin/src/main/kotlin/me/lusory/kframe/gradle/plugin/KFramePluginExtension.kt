@@ -28,7 +28,6 @@ package me.lusory.kframe.gradle.plugin
  *     // or
  *     mainPackageName = "kframe"
  *     mainClassName = "Main"
- *
  *     // should kotlin-stdlib and kotlin-reflect be applied to the project automatically (implementation)?
  *     applyKotlin = true
  * }
