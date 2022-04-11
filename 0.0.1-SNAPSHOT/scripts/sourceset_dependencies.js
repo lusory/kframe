@@ -1,1 +1,1 @@
-sourceset_dependencies = '{":annotation:dokkaHtmlPartial/main":[],":core:dokkaHtmlPartial/main":[],":plugin:dokkaHtmlPartial/main":[]}'
+sourceset_dependencies = '{":annotation:dokkaHtmlPartial/main":[],":core:dokkaHtmlPartial/main":[],":plugin:dokkaHtmlPartial/main":[],":data-ktorm:dokkaHtmlPartial/main":[]}'

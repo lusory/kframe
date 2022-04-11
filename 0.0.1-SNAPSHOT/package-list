@@ -9,5 +9,7 @@ me.lusory.kframe
 me.lusory.kframe.exceptions
 me.lusory.kframe.inject
 me.lusory.kframe.util
+module:data-ktorm
+me.lusory.kframe.data.ktorm
 module:plugin
 me.lusory.kframe.gradle.plugin
