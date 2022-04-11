@@ -98,9 +98,11 @@ fun argumentParser(@Exact(name = "args") args: Array<String>): ArgumentParser = 
 @Component(name = "properties")
 @InternalAPI(note = "use dependency injection to get this instance")
 fun properties(@Exact(name = "argumentParser") argParser: ArgumentParser): Properties = Properties().also { props ->
-    for (pair: Argument in argParser.args) {
-        if (pair.isLong) {
-            props.setProperty(pair.name, pair.value)
+    for (arg: Argument in argParser.args) {
+        if (arg.isLong) {
+            props.setProperty(arg.name, arg.value)
         }
     }
+
+    // TODO: add ClassLoader searching for property files
 }
