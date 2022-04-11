@@ -20,22 +20,22 @@ package me.lusory.kframe
 import me.lusory.kframe.inject.Component
 import me.lusory.kframe.inject.Exact
 import me.lusory.kframe.util.InternalAPI
+import java.util.*
 
 /**
  * A command line argument parsing API.
  *
  * Instances are immutable.
  *
- * @author zlataovce
  * @since 0.0.1
  */
 interface ArgumentParser {
     /**
      * A [List] of option name - value pairs.
      *
-     * The pair value can be null, only if the option has no specified value.
+     * The value can be null, only if the option has no specified value.
      */
-    val args: List<Pair<String, String?>>
+    val args: List<Argument>
 
     /**
      * The amount of parsed option name - value pairs.
@@ -55,8 +55,27 @@ interface ArgumentParser {
      * @param names the possible option names (e.g. a long and a short name)
      * @return the option value, null if no value was supplied
      */
-    operator fun get(vararg names: String): String? = args.firstOrNull { arg -> names.any { arg.first == it } }?.second
+    operator fun get(vararg names: String): String? = args.firstOrNull { arg -> names.any { arg.name == it } }?.value
+
 }
+
+/**
+ * An immutable data-holding class for an option name and value.
+ */
+data class Argument(
+    /**
+     * The option name.
+     */
+    val name: String,
+    /**
+     * The option value, null if not supplied.
+     */
+    val value: String?,
+    /**
+     * Is this option specified as a long one? (prefixed with `--`, e.g. --kframe.stuff)
+     */
+    val isLong: Boolean
+)
 
 /**
  * Provides an [ArgumentParser] instance for dependency injection. Should **not** be called manually.
@@ -66,5 +85,22 @@ interface ArgumentParser {
  * @suppress API for internal use
  */
 @Component(name = "argumentParser")
-@InternalAPI // use dependency injection to get this instance
+@InternalAPI(note = "use dependency injection to get this instance")
 fun argumentParser(@Exact(name = "args") args: Array<String>): ArgumentParser = ArgumentParserImpl(args)
+
+/**
+ * Provides a [Properties] instance populated with long arguments for dependency injection. Should **not** be called manually.
+ *
+ * @param argParser an [ArgumentParser] instance
+ * @return the properties
+ * @suppress API for internal use
+ */
+@Component(name = "properties")
+@InternalAPI(note = "use dependency injection to get this instance")
+fun properties(@Exact(name = "argumentParser") argParser: ArgumentParser): Properties = Properties().also { props ->
+    for (pair: Argument in argParser.args) {
+        if (pair.isLong) {
+            props.setProperty(pair.name, pair.value)
+        }
+    }
+}

@@ -21,46 +21,66 @@ import me.lusory.kframe.exceptions.ArgumentParseException
 
 internal class ArgumentParserImpl(
     rawArgs: Array<String>,
-    override val args: MutableList<Pair<String, String?>> = mutableListOf()
+    override val args: MutableList<Argument> = mutableListOf()
 ) : ArgumentParser {
     init {
         if (rawArgs.isNotEmpty()) {
-            var lastArg: String? = null
+            // name - isLong
+            var lastArg: Pair<String, Boolean>? = null
 
             for (arg0: String in rawArgs) {
                 var arg = arg0
+                val isLong: Boolean = arg.startsWith("--")
 
                 if (arg == "--" || arg == "-") {
                     throw ArgumentParseException("Invalid argument $arg")
                 }
                 arg = when {
-                    arg.startsWith("--") -> arg.substring(2)
+                    isLong -> arg.substring(2)
                     arg.startsWith('-') -> arg.substring(1)
                     else -> {
                         if (lastArg == null) {
                             throw ArgumentParseException("Invalid argument $arg")
                         }
 
-                        args.add(lastArg to arg.trimQuotes())
+                        args += Argument(
+                            lastArg.first,
+                            arg.trimQuotes(),
+                            lastArg.second
+                        )
+
                         lastArg = null
                         continue
                     }
                 }
 
                 if (lastArg != null) {
-                    args.add(lastArg to null)
+                    args += Argument(
+                        lastArg.first,
+                        null,
+                        lastArg.second
+                    )
+
                     lastArg = null
                 }
 
                 if (arg.contains('=')) {
-                    args.add(arg.substringBefore('=') to arg.substringAfter('=').trimQuotes())
+                    args += Argument(
+                        arg.substringBefore('='),
+                        arg.substringAfter('=').trimQuotes(),
+                        isLong
+                    )
                 } else {
-                    lastArg = arg
+                    lastArg = Pair(arg, isLong)
                 }
             }
 
             if (lastArg != null) {
-                args.add(lastArg to null)
+                args += Argument(
+                    lastArg.first,
+                    null,
+                    lastArg.second
+                )
             }
         }
     }

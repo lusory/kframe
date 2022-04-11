@@ -22,7 +22,6 @@ package me.lusory.kframe.inject
  *
  * @param name the component qualifier
  *
- * @author zlataovce
  * @since 0.0.1
  */
 @Target(AnnotationTarget.VALUE_PARAMETER)

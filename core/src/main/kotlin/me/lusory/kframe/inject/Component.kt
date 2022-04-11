@@ -22,7 +22,6 @@ package me.lusory.kframe.inject
  *
  * @param name the component name, optional
  *
- * @author zlataovce
  * @since 0.0.1
  */
 @Target(AnnotationTarget.CLASS, AnnotationTarget.FUNCTION)

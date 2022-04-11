@@ -20,7 +20,6 @@ package me.lusory.kframe.inject
 /**
  * Marks a constructor as eligible for dependency injection, useful when a class has multiple constructors.
  *
- * @author zlataovce
  * @since 0.0.1
  */
 @Target(AnnotationTarget.CONSTRUCTOR)

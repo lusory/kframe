@@ -20,7 +20,6 @@ package me.lusory.kframe.inject
 /**
  * Marks a component as a non-singleton (= a new component will be instantiated for every dependent).
  *
- * @author zlataovce
  * @since 0.0.1
  */
 @Target(AnnotationTarget.CLASS, AnnotationTarget.FUNCTION)

@@ -24,7 +24,6 @@ import com.google.devtools.ksp.processing.SymbolProcessorProvider
 /**
  * The provider of [KFrameProcessor], instantiated via the Java Service Loader API.
  *
- * @author zlataovce
  * @since 0.0.1
  */
 class KFrameProcessorProvider : SymbolProcessorProvider {

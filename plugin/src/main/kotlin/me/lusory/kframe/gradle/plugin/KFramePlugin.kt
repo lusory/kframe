@@ -32,11 +32,18 @@ import java.util.zip.ZipFile
 /**
  * The KFrame Gradle plugin main class, instantiated via the Java Service Loader API.
  *
- * @author zlataovce
  * @since 0.0.1
  */
 class KFramePlugin : Plugin<Project> {
     override fun apply(target: Project) {
+        try {
+            if (!target.pluginManager.hasPlugin("org.jetbrains.kotlin.jvm")) {
+                target.pluginManager.apply(KotlinPlatformJvmPlugin::class.java)
+            }
+        } catch (ignored: NoClassDefFoundError) {
+            throw RuntimeException("The Kotlin Gradle plugin needs to be available on the classpath for KFrame to work!")
+        }
+
         val extension: KFramePluginExtension = target.extensions.create("kframe", KFramePluginExtension::class.java)
 
         target.pluginManager.apply(KspGradleSubplugin::class.java)
@@ -46,24 +53,16 @@ class KFramePlugin : Plugin<Project> {
             ext.arg("className", extension.mainClassName)
         }
 
-        try {
-            if (!target.pluginManager.hasPlugin("org.jetbrains.kotlin.jvm")) {
-                target.pluginManager.apply(KotlinPlatformJvmPlugin::class.java)
+        target.extensions.configure(KotlinJvmProjectExtension::class.java) {
+            it.sourceSets.forEach { sourceSet ->
+                sourceSet.kotlin.srcDir("build/generated/ksp/${sourceSet.name}/kotlin")
             }
+        }
 
-            target.extensions.configure(KotlinJvmProjectExtension::class.java) {
-                it.sourceSets.forEach { sourceSet ->
-                    sourceSet.kotlin.srcDir("build/generated/ksp/${sourceSet.name}/kotlin")
-                }
-            }
-
-            if (extension.applyKotlin) {
-                val kotlinVersion: String = target.getKotlinPluginVersion()
-                target.dependencies.add("implementation", "org.jetbrains.kotlin:kotlin-stdlib:$kotlinVersion")
-                target.dependencies.add("implementation", "org.jetbrains.kotlin:kotlin-reflect:$kotlinVersion")
-            }
-        } catch (ignored: NoClassDefFoundError) {
-            throw RuntimeException("The Kotlin Gradle plugin needs to be available on the classpath for KFrame to work!")
+        if (extension.applyKotlin) {
+            val kotlinVersion: String = target.getKotlinPluginVersion()
+            target.dependencies.add("implementation", "org.jetbrains.kotlin:kotlin-stdlib:$kotlinVersion")
+            target.dependencies.add("implementation", "org.jetbrains.kotlin:kotlin-reflect:$kotlinVersion")
         }
 
         target.dependencies.add("implementation", "me.lusory.kframe:core:${BuildInfo.VERSION}")
@@ -79,22 +78,34 @@ class KFramePlugin : Plugin<Project> {
         target.afterEvaluate {
             val members: MutableSet<String> = mutableSetOf()
             val classes: MutableSet<String> = mutableSetOf()
+            val listeners: MutableSet<String> = mutableSetOf()
             target.configurations.getByName("compileClasspath").resolvedConfiguration.resolvedArtifacts.forEach { artifact ->
                 ZipFile(artifact.file).use { zipFile ->
                     zipFile.entries().iterator().forEach { entry ->
                         if (entry.name.substringAfterLast('/') == "kframe.properties") {
                             val props: Properties = Properties().also { it.load(zipFile.getInputStream(entry)) }
-                            members.addAll((props["inject.members"] as? String ?: "").split(','))
-                            classes.addAll((props["inject.classes"] as? String ?: "").split(','))
+                            members.addAll((props["inject.members"] as? String ?: "").split(',').toMutableList().apply { clearIfEmptyStr() })
+                            classes.addAll((props["inject.classes"] as? String ?: "").split(',').toMutableList().apply { clearIfEmptyStr() })
+                            listeners.addAll((props["inject.listeners"] as? String ?: "").split(',').toMutableList().apply { clearIfEmptyStr() })
                         }
                     }
                 }
             }
 
             target.extensions.configure(KspExtension::class.java) { ext ->
-                ext.arg("injectMembers", members.joinToString(","))
-                ext.arg("injectClasses", classes.joinToString(","))
+                // https://github.com/google/ksp/issues/154
+                ext.arg("injectMembers", members.joinToString(",").toBase64())
+                ext.arg("injectClasses", classes.joinToString(",").toBase64())
+                ext.arg("injectListeners", listeners.joinToString(",").toBase64())
             }
         }
     }
+
+    private fun MutableList<String>.clearIfEmptyStr() {
+        if (size == 1 && get(0).isEmpty()) {
+            clear()
+        }
+    }
+
+    private fun String.toBase64(): String = Base64.getEncoder().encodeToString(encodeToByteArray())
 }

@@ -161,6 +161,8 @@ Using the plugin is highly recommended, but you can also do it in plain Gradle.
 ##### Kotlin DSL
 
 ```kotlin
+import java.util.Base64
+
 plugins {
     id("com.google.devtools.ksp") version "1.6.20-1.0.5" // pick the latest KSP version for your Kotlin version (kotlinver-kspver)
     // make sure to also have the kotlin gradle plugin applied
@@ -198,23 +200,35 @@ tasks.withType<Jar> {
 afterEvaluate {
     val members: MutableSet<String> = mutableSetOf()
     val classes: MutableSet<String> = mutableSetOf()
+    val listeners: MutableSet<String> = mutableSetOf()
     configurations.getByName("compileClasspath").resolvedConfiguration.resolvedArtifacts.forEach { artifact ->
         ZipFile(artifact.file).use { zipFile ->
             zipFile.entries().iterator().forEach { entry ->
                 if (entry.name.substringAfterLast('/') == "kframe.properties") {
                     val props: Properties = Properties().also { it.load(zipFile.getInputStream(entry)) }
-                    members.addAll((props["inject.members"] as? String ?: "").split(','))
-                    classes.addAll((props["inject.classes"] as? String ?: "").split(','))
+                    members.addAll((props["inject.members"] as? String ?: "").split(',').toMutableList().apply { clearIfEmptyStr() })
+                    classes.addAll((props["inject.classes"] as? String ?: "").split(',').toMutableList().apply { clearIfEmptyStr() })
+                    listeners.addAll((props["inject.listeners"] as? String ?: "").split(',').toMutableList().apply { clearIfEmptyStr() })
                 }
             }
         }
     }
 
     ksp {
-        arg("injectMembers", members.joinToString(","))
-        arg("injectClasses", classes.joinToString(","))
+        // https://github.com/google/ksp/issues/154
+        arg("injectMembers", members.joinToString(",").toBase64())
+        arg("injectClasses", classes.joinToString(",").toBase64())
+        arg("injectListeners", listeners.joinToString(",").toBase64())
     }
 }
+
+private fun MutableList<String>.clearIfEmptyStr() {
+    if (size == 1 && get(0).isEmpty()) {
+        clear()
+    }
+}
+
+private fun String.toBase64(): String = Base64.getEncoder().encodeToString(encodeToByteArray())
 
 // optional
 

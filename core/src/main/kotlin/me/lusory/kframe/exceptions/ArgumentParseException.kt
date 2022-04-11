@@ -22,7 +22,6 @@ package me.lusory.kframe.exceptions
  *
  * @param message the exception message
  *
- * @author zlataovce
  * @since 0.0.1
  */
 class ArgumentParseException(message: String) : Exception(message)

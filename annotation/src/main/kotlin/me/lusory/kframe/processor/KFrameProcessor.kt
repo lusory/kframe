@@ -18,6 +18,7 @@
 package me.lusory.kframe.processor
 
 import com.google.devtools.ksp.containingFile
+import com.google.devtools.ksp.getClassDeclarationByName
 import com.google.devtools.ksp.getConstructors
 import com.google.devtools.ksp.isConstructor
 import com.google.devtools.ksp.processing.Resolver
@@ -31,15 +32,16 @@ import com.squareup.kotlinpoet.ksp.KotlinPoetKspPreview
 import com.squareup.kotlinpoet.ksp.toClassName
 import com.squareup.kotlinpoet.ksp.writeTo
 import me.lusory.kframe.processor.exceptions.DependencyResolveException
+import java.util.*
 
 /**
  * The annotation processor for dependency injection.
  *
  * @param environment the processor environment, passed down from the provider
  *
- * @author zlataovce
  * @since 0.0.1
  */
+// TODO: refactor, extendability
 @OptIn(KotlinPoetKspPreview::class)
 class KFrameProcessor(private val environment: SymbolProcessorEnvironment) : SymbolProcessor {
     private var invoked: Boolean = false
@@ -71,48 +73,25 @@ class KFrameProcessor(private val environment: SymbolProcessorEnvironment) : Sym
         val backlog: MutableList<BacklogItem> = mutableListOf()
 
         // TODO: replace with https://github.com/google/ksp/issues/431
-        val members: List<String> = (environment.options["injectMembers"] ?: "").split(',').toMutableList().apply { if (size == 1 && get(0).isEmpty()) clear() }
-        for (member: String in members) {
-            environment.logger.info("Processing foreign top-level function declaration $member...")
-
-            resolver.getFunctionDeclarationsByName(resolver.getKSNameFromString(member), includeTopLevel = true)
-                .forEach { symbol ->
-                    if (symbol.functionKind == FunctionKind.TOP_LEVEL) {
-                        backlog.add(
-                            BacklogItem(
-                                symbol.returnType!!.resolve().declaration as KSClassDeclaration,
-                                symbol,
-                                symbol.isAnnotationPresent("me.lusory.kframe.inject.NonSingleton"),
-                                symbol.getAnnotationsByType("me.lusory.kframe.inject.Component")
-                                    .first()
-                                    .let { (it.arguments.first { arg -> arg.name?.asString() == "name" }.value as String).nullIfEmpty() }
-                            )
-                        )
-                    }
-                }
-        }
-
-        // TODO: replace with https://github.com/google/ksp/issues/431
-        val classes: List<String> = (environment.options["injectClasses"] ?: "").split(',').toMutableList().apply { if (size == 1 && get(0).isEmpty()) clear() }
-        for (klass: String in classes) {
-            environment.logger.info("Processing foreign class declaration $klass...")
-
-            val symbol: KSClassDeclaration = resolver.getClassDeclarationByName(resolver.getKSNameFromString(klass))
-                ?: throw RuntimeException("Could not resolve component $klass")
-
-            backlog.add(
-                BacklogItem(
-                    symbol,
-                    selectConstructor(symbol),
-                    symbol.isAnnotationPresent("me.lusory.kframe.inject.NonSingleton"),
-                    symbol.getAnnotationsByType("me.lusory.kframe.inject.Component")
-                        .first()
-                        .let { (it.arguments.first { arg -> arg.name?.asString() == "name" }.value as String).nullIfEmpty() }
-                )
+        val listeners: List<KSAnnotated> = resolver.getSymbolsWithAnnotation("me.lusory.kframe.inject.Listen").toMutableList().apply {
+            addAll(
+                (environment.options["injectListeners"] ?: "").fromBase64().split(',').toMutableList().apply { clearIfEmptyStr() }
+                    .flatMap { resolver.getFunctionDeclarationsByName(resolver.getKSNameFromString(it), includeTopLevel = true) }
             )
         }
 
-        resolver.getSymbolsWithAnnotation("me.lusory.kframe.inject.Component")
+        resolver.getSymbolsWithAnnotation("me.lusory.kframe.inject.Component").toMutableList()
+            .apply {
+                // TODO: replace with https://github.com/google/ksp/issues/431
+                addAll(
+                    (environment.options["injectClasses"] ?: "").fromBase64().split(',').toMutableList().apply { clearIfEmptyStr() }
+                        .map { resolver.getClassDeclarationByName(it) ?: throw RuntimeException("Could not resolve component $it") }
+                )
+                addAll(
+                    (environment.options["injectMembers"] ?: "").fromBase64().split(',').toMutableList().apply { clearIfEmptyStr() }
+                        .flatMap { resolver.getFunctionDeclarationsByName(resolver.getKSNameFromString(it), includeTopLevel = true) }
+                )
+            }
             .forEach { symbol ->
                 if (((symbol is KSClassDeclaration && symbol.classKind == ClassKind.CLASS) || (symbol is KSFunctionDeclaration && symbol.functionKind == FunctionKind.TOP_LEVEL)) && (symbol as KSModifierListOwner).isAccessible()) {
                     symbol.containingFile?.let { deps.add(it) }
@@ -228,48 +207,33 @@ class KFrameProcessor(private val environment: SymbolProcessorEnvironment) : Sym
             }
         }
 
-        val contextInitializers: Sequence<KSAnnotated> = resolver.getSymbolsWithAnnotation("me.lusory.kframe.inject.ContextInitializer")
+        if (listeners.isNotEmpty()) {
+            val initListeners: MutableList<KSAnnotated> = mutableListOf()
+            val closeListeners: MutableList<KSAnnotated> = mutableListOf()
 
-        if (contextInitializers.count() > 0) {
-            mainBuilder.beginControlFlow("afterBuild { context ->")
-
-            contextInitializers.forEach { symbol ->
-                if (symbol is KSFunctionDeclaration) {
-                    if (symbol.functionKind == FunctionKind.TOP_LEVEL) {
-                        val memberName = MemberName(symbol.packageName.asString(), symbol.simpleName.asString())
-                        if (symbol.parameters.size == 1 && symbol.parameters[0].type.resolve().declaration.qualifiedName?.asString() == "me.lusory.kframe.inject.ApplicationContext") {
-                            mainBuilder.addStatement("%M(context)", memberName)
-                        } else if (symbol.parameters.isEmpty()) {
-                            mainBuilder.addStatement("%M()", memberName)
-                        } else {
-                            throw IllegalArgumentException("@ContextInitializer annotated methods must accept zero parameters or only one of type ApplicationContext")
-                        }
-                    } else if (symbol.functionKind == FunctionKind.MEMBER) {
-                        val parentClassName: String = (symbol.parentDeclaration as? KSClassDeclaration)!!.qualifiedName!!.asString()
-                        val memberVars = vars[parentClassName]
-                            ?.filter { !it.second } // filter non-singletons
-
-                        if (memberVars == null) {
-                            environment.logger.warn("Context initializer method ${symbol.simpleName} found for non-component type $parentClassName")
-                            return@forEach
-                        }
-
-                        for (memberVar in memberVars) {
-                            if (symbol.parameters.size == 1 && symbol.parameters[0].type.resolve().declaration.qualifiedName?.asString() == "me.lusory.kframe.inject.ApplicationContext") {
-                                mainBuilder.addStatement("${memberVar.first}.${symbol.simpleName}(context)")
-                            } else if (symbol.parameters.isEmpty()) {
-                                mainBuilder.addStatement("${memberVar.first}.${symbol.simpleName}()")
-                            } else {
-                                throw IllegalArgumentException("@ContextInitializer annotated methods must accept zero parameters or only one of type ApplicationContext")
-                            }
-                        }
-                    } else {
-                        throw UnsupportedOperationException("Only top-level or component member functions can be annotated with @ContextInitializer")
-                    }
+            listeners.forEach { symbol ->
+                if (symbol.getAnnotationsByType("me.lusory.kframe.inject.Listen").first().hasEnumArgument("action", "INIT")) {
+                    initListeners.add(symbol)
+                } else {
+                    closeListeners.add(symbol)
                 }
             }
 
-            mainBuilder.endControlFlow()
+            if (initListeners.isNotEmpty()) {
+                mainBuilder.beginControlFlow("afterBuild { context ->")
+
+                initListeners.forEach { mainBuilder.listenerCall(it, vars) }
+
+                mainBuilder.endControlFlow()
+            }
+
+            if (closeListeners.isNotEmpty()) {
+                mainBuilder.beginControlFlow("%M", MemberName("me.lusory.kframe.inject", "shutdownHook"))
+
+                closeListeners.forEach { mainBuilder.listenerCall(it, vars) }
+
+                mainBuilder.endControlFlow()
+            }
         }
 
         mainBuilder.endControlFlow()
@@ -295,6 +259,44 @@ class KFrameProcessor(private val environment: SymbolProcessorEnvironment) : Sym
             ?: throw DependencyResolveException("No autowiring constructor found for class " + classDeclaration.qualifiedName?.asString())
     }
 
+    private fun FunSpec.Builder.listenerCall(symbol: KSAnnotated, vars: Map<String, MutableList<Triple<String, Boolean, String?>>>) {
+        if (symbol is KSFunctionDeclaration) {
+            if (symbol.functionKind == FunctionKind.TOP_LEVEL) {
+                val memberName = MemberName(symbol.packageName.asString(), symbol.simpleName.asString())
+                if (symbol.parameters.size == 1 && symbol.parameters[0].type.resolve().declaration.qualifiedName?.asString() == "me.lusory.kframe.inject.ApplicationContext") {
+                    addStatement("%M(context)", memberName)
+                } else if (symbol.parameters.isEmpty()) {
+                    addStatement("%M()", memberName)
+                } else {
+                    throw IllegalArgumentException("@Listen annotated methods must accept zero parameters or only one of type ApplicationContext")
+                }
+            } else if (symbol.functionKind == FunctionKind.MEMBER) {
+                val parentClassName: String = (symbol.parentDeclaration as? KSClassDeclaration)!!.qualifiedName!!.asString()
+                val memberVars = vars[parentClassName]
+                    ?.filter { !it.second } // filter non-singletons
+
+                if (memberVars == null) {
+                    environment.logger.warn("Listener method ${symbol.simpleName} found for non-component type $parentClassName")
+                    return
+                }
+
+                for (memberVar in memberVars) {
+                    if (symbol.parameters.size == 1 && symbol.parameters[0].type.resolve().declaration.qualifiedName?.asString() == "me.lusory.kframe.inject.ApplicationContext") {
+                        addStatement("${memberVar.first}.${symbol.simpleName}(context)")
+                    } else if (symbol.parameters.isEmpty()) {
+                        addStatement("${memberVar.first}.${symbol.simpleName}()")
+                    } else {
+                        throw IllegalArgumentException("@Listen annotated methods must accept zero parameters or only one of type ApplicationContext")
+                    }
+                }
+            } else {
+                throw UnsupportedOperationException("Only top-level or component member functions can be annotated with @Listen")
+            }
+        }
+    }
+
+    private fun KSAnnotation.hasEnumArgument(name: String, enumEntry: String): Boolean = arguments.any { it.name!!.asString() == name && (it.value as KSType).declaration.simpleName.asString() == enumEntry }
+
     private fun KSAnnotated.isAnnotationPresent(qualifiedName: String): Boolean {
         val simpleName: String = qualifiedName.substringAfterLast('.')
 
@@ -317,6 +319,14 @@ class KFrameProcessor(private val environment: SymbolProcessorEnvironment) : Sym
         modifiers.none { it == Modifier.PRIVATE || it == Modifier.PROTECTED || it == Modifier.INTERNAL }
 
     private fun String.nullIfEmpty(): String? = ifEmpty { null }
+
+    private fun String.fromBase64(): String = String(Base64.getDecoder().decode(this))
+
+    private fun MutableList<String>.clearIfEmptyStr() {
+        if (size == 1 && get(0).isEmpty()) {
+            clear()
+        }
+    }
 
     private data class BacklogItem(
         val classDecl: KSClassDeclaration,

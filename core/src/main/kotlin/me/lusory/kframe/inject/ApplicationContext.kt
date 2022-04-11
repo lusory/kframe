@@ -24,7 +24,6 @@ import kotlin.reflect.full.isSubclassOf
 /**
  * A data-holding interface with all component instances currently known.
  *
- * @author zlataovce
  * @since 0.0.1
  */
 interface ApplicationContext {
@@ -80,6 +79,13 @@ interface ApplicationContext {
         fun build(): ApplicationContext
     }
 }
+
+/**
+ * Adds a [Runnable] to run as a JVM shutdown hook.
+ *
+ * @param block the runnable
+ */
+fun shutdownHook(block: () -> Unit) = Runtime.getRuntime().addShutdownHook(Thread(block))
 
 /**
  * Creates an [ApplicationContext] instance with a builder.

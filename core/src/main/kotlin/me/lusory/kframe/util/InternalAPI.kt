@@ -19,8 +19,12 @@ package me.lusory.kframe.util
 
 /**
  * A meta-annotation for marking a symbol as an "internal API" (should be used only by the annotation processor output).
+ *
+ * @param note developer note for this internal API
+ *
+ * @since 0.0.1
  */
 @Target(AnnotationTarget.CLASS, AnnotationTarget.FUNCTION, AnnotationTarget.CONSTRUCTOR, AnnotationTarget.PROPERTY)
 @Retention(AnnotationRetention.SOURCE)
 @MustBeDocumented
-annotation class InternalAPI
+annotation class InternalAPI(val note: String = "")

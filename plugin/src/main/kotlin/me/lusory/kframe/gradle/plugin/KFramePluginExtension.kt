@@ -33,7 +33,6 @@ package me.lusory.kframe.gradle.plugin
  * }
  * ```
  *
- * @author zlataovce
  * @since 0.0.1
  */
 abstract class KFramePluginExtension {
