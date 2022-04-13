@@ -20,6 +20,7 @@ An application base, carrying the essential classes
 
 ## Features
 - Compile-time dependency injection
+- JVM events
 - Argument parsing
 
 ### Dependency injection
@@ -47,6 +48,27 @@ class TestComponent1 {
         // use the context
         context[TestComponent2::class] // returns a TestComponent2 instance
         context.components // all component instances
+    }
+}
+```
+
+### JVM events
+
+The `@On` annotation can mark a function to run:
+ - After the application context has been built (`CONTEXT_CREATED`)
+ - After the JVM received an interrupt/quit signal (`SHUTDOWN`)
+
+The function can be a part of a component or a top-level function, and it can accept zero or one parameter of type `ApplicationContext`.
+
+```kt
+@On(Action.CONTEXT_CREATED)
+fun contextCreated() = println("Context created!")
+
+@Component
+class Component0 {
+    @On(Action.SHUTDOWN)
+    fun cleanup(context: ApplicationContext) {
+        // cleanup logic
     }
 }
 ```

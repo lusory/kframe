@@ -73,7 +73,7 @@ class KFrameProcessor(private val environment: SymbolProcessorEnvironment) : Sym
         val backlog: MutableList<BacklogItem> = mutableListOf()
 
         // TODO: replace with https://github.com/google/ksp/issues/431
-        val listeners: List<KSAnnotated> = resolver.getSymbolsWithAnnotation("me.lusory.kframe.inject.Listen").toMutableList().apply {
+        val listeners: List<KSAnnotated> = resolver.getSymbolsWithAnnotation("me.lusory.kframe.inject.On").toMutableList().apply {
             addAll(
                 (environment.options["injectListeners"] ?: "").fromBase64().split(',').toMutableList().apply { clearIfEmptyStr() }
                     .flatMap { resolver.getFunctionDeclarationsByName(resolver.getKSNameFromString(it), includeTopLevel = true) }
@@ -212,20 +212,17 @@ class KFrameProcessor(private val environment: SymbolProcessorEnvironment) : Sym
             val closeListeners: MutableList<KSAnnotated> = mutableListOf()
 
             listeners.forEach { symbol ->
-                if (symbol.getAnnotationsByType("me.lusory.kframe.inject.Listen").first().hasEnumArgument("action", "INIT")) {
+                val onAnnotation: KSAnnotation = symbol.getAnnotationsByType("me.lusory.kframe.inject.On").first()
+                if (onAnnotation.hasEnumArgument("action", "CONTEXT_CREATE")) {
                     initListeners.add(symbol)
-                } else {
+                } else if (onAnnotation.hasEnumArgument("action", "SHUTDOWN")) {
                     closeListeners.add(symbol)
                 }
             }
 
-            if (initListeners.isNotEmpty()) {
-                mainBuilder.beginControlFlow("afterBuild { context ->")
+            mainBuilder.beginControlFlow("afterBuild { context ->")
 
-                initListeners.forEach { mainBuilder.listenerCall(it, vars) }
-
-                mainBuilder.endControlFlow()
-            }
+            initListeners.forEach { mainBuilder.listenerCall(it, vars) }
 
             if (closeListeners.isNotEmpty()) {
                 mainBuilder.beginControlFlow("%M", MemberName("me.lusory.kframe.inject", "shutdownHook"))
@@ -234,6 +231,8 @@ class KFrameProcessor(private val environment: SymbolProcessorEnvironment) : Sym
 
                 mainBuilder.endControlFlow()
             }
+
+            mainBuilder.endControlFlow()
         }
 
         mainBuilder.endControlFlow()

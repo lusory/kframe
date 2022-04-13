@@ -18,28 +18,32 @@
 package me.lusory.kframe.inject
 
 /**
- * Marks a top-level function or a class method to run after the specified action has been performed.
+ * Marks a top-level or a class function to run when the specified action is ran.
+ *
+ * @param action the action
  *
  * @since 0.0.1
  */
 @Target(AnnotationTarget.FUNCTION)
 @Retention(AnnotationRetention.RUNTIME)
 @MustBeDocumented
-annotation class Listen(val action: Action)
+annotation class On(val action: Action)
 
 /**
- * An action that can be triggered within the application lifecycle.
- *
- * @since 0.0.1
+ * Actions for the [On] annotation.
  */
 enum class Action {
     /**
-     * The application context was populated.
+     * The [ApplicationContext] was created.
+     *
+     * @since 0.0.1
      */
-    INIT,
+    CONTEXT_CREATE,
 
     /**
-     * The JVM received a `SIGINT`.
+     * The JVM received an interrupt/quit signal.
+     *
+     * @since 0.0.1
      */
-    CLOSE
+    SHUTDOWN
 }
