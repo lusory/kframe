@@ -8,4 +8,5 @@ object DependencyVersions {
     const val MOCKITO_KT = "4.0.0"
     const val DOKKA = "1.6.10"
     const val KTORM = "3.4.1"
+    const val SHADOW = "7.1.2"
 }

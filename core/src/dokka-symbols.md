@@ -164,6 +164,7 @@ Using the plugin is highly recommended, but you can also do it in plain Gradle.
 import java.util.Base64
 
 plugins {
+    id("com.github.johnrengelman.shadow") version "7.1.2"
     id("com.google.devtools.ksp") version "1.6.20-1.0.5" // pick the latest KSP version for your Kotlin version (kotlinver-kspver)
     // make sure to also have the kotlin gradle plugin applied
     kotlin("jvm") version "1.6.20"

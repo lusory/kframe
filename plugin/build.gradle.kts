@@ -6,9 +6,14 @@ plugins {
     `java-gradle-plugin`
 }
 
+repositories {
+    gradlePluginPortal()
+}
+
 dependencies {
     compileOnly(group = "org.jetbrains.kotlin", name = "kotlin-gradle-plugin", version = DependencyVersions.KOTLIN) // added by user
     implementation(group = "com.google.devtools.ksp", name = "symbol-processing-gradle-plugin", version = DependencyVersions.KSP)
+    implementation(group = "gradle.plugin.com.github.johnrengelman", name = "shadow", version = DependencyVersions.SHADOW)
 }
 
 gradlePlugin {

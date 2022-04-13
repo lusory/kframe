@@ -17,6 +17,7 @@
 
 package me.lusory.kframe.gradle.plugin
 
+import com.github.jengelman.gradle.plugins.shadow.ShadowPlugin
 import com.google.devtools.ksp.gradle.KspExtension
 import com.google.devtools.ksp.gradle.KspGradleSubplugin
 import me.lusory.kframe.gradle.BuildInfo
@@ -46,6 +47,7 @@ class KFramePlugin : Plugin<Project> {
 
         val extension: KFramePluginExtension = target.extensions.create("kframe", KFramePluginExtension::class.java)
 
+        target.pluginManager.apply(ShadowPlugin::class.java)
         target.pluginManager.apply(KspGradleSubplugin::class.java)
 
         target.extensions.configure(KspExtension::class.java) { ext ->
