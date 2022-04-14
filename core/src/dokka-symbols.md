@@ -61,12 +61,12 @@ The `@On` annotation can mark a function to run:
 The function can be a part of a component or a top-level function, and it can accept zero or one parameter of type `ApplicationContext`.
 
 ```kt
-@On(Action.CONTEXT_CREATED)
+\@On(Action.CONTEXT_CREATED)
 fun contextCreated() = println("Context created!")
 
-@Component
+\@Component
 class Component0 {
-    @On(Action.SHUTDOWN)
+    \@On(Action.SHUTDOWN)
     fun cleanup(context: ApplicationContext) {
         // cleanup logic
     }
