@@ -17,7 +17,9 @@
 
 package me.lusory.kframe.data.ktorm
 
+import mu.KotlinLogging
 import org.ktorm.database.Database
+import org.ktorm.logging.Slf4jLoggerAdapter
 import kotlin.reflect.KClass
 
 /**
@@ -30,6 +32,16 @@ interface DatabaseBuilder {
      * The JDBC connection string, must not be null on build.
      */
     var connectionUrl: String?
+
+    /**
+     * The database user, can be included in [connectionUrl].
+     */
+    var user: String?
+
+    /**
+     * The database password, can be included in [connectionUrl].
+     */
+    var password: String?
 
     /**
      * The driver class name, use [driver] to specify a driver class.
@@ -55,11 +67,16 @@ interface DatabaseBuilder {
 
 internal class DatabaseBuilderImpl(
     override var connectionUrl: String? = null,
+    override var user: String? = null,
+    override var password: String? = null,
     override var driverClassName: String? = null
 ) : DatabaseBuilder {
     override fun build(): Database = Database.connect(
         connectionUrl ?: throw IllegalArgumentException("Connection URL not specified"),
-        driver = driverClassName
+        user = user,
+        password = password,
+        driver = driverClassName,
+        logger = Slf4jLoggerAdapter(KotlinLogging.logger {})
     )
 }
 

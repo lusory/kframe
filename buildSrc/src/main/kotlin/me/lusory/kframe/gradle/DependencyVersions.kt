@@ -9,4 +9,6 @@ object DependencyVersions {
     const val DOKKA = "1.6.10"
     const val KTORM = "3.4.1"
     const val SHADOW = "7.1.2"
+    const val KT_LOGGING = "2.1.21"
+    const val SLF4J = "1.7.36"
 }
