@@ -48,7 +48,7 @@ class KFrameProcessor(private val environment: SymbolProcessorEnvironment) : Sym
 
     override fun process(resolver: Resolver): List<KSAnnotated> {
         if (invoked) {
-            return listOf()
+            return emptyList()
         }
 
         val packageName: String = environment.options["packageName"] ?: "kframe"
@@ -246,7 +246,7 @@ class KFrameProcessor(private val environment: SymbolProcessorEnvironment) : Sym
         environment.logger.info("Created ${packageName}.${className}.")
 
         invoked = true
-        return listOf()
+        return emptyList()
     }
 
     private fun selectConstructor(classDeclaration: KSClassDeclaration): KSFunctionDeclaration {

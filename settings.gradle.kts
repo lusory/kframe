@@ -1,3 +1,8 @@
 rootProject.name = "kframe"
 
-include("core", "annotation", "plugin", "data-ktorm")
+include(
+    "core",
+    "annotation",
+    "plugin",
+    "data-ktorm"
+)

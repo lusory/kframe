@@ -43,7 +43,6 @@ interface ApplicationContext {
     /**
      * A DSL builder for [ApplicationContext].
      *
-     * @author zlataovce
      * @since 0.0.1
      */
     @InternalAPI

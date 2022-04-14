@@ -17,13 +17,56 @@
 
 package me.lusory.kframe.data.ktorm
 
-import me.lusory.kframe.inject.Component
-import me.lusory.kframe.inject.Exact
 import org.ktorm.database.Database
-import java.util.*
+import kotlin.reflect.KClass
 
-@Component(name = "ktormDatabase")
-fun ktormDatabase(@Exact(name = "properties") props: Properties): Database = Database.connect(
-    props["ktorm.url"] as? String ?: throw RuntimeException("ktorm.url property not provided"),
-    driver = props["ktorm.driver"] as? String
-)
+/**
+ * A DSL builder for [Database].
+ *
+ * @since 0.0.1
+ */
+interface DatabaseBuilder {
+    /**
+     * The JDBC connection string, must not be null on build.
+     */
+    var connectionUrl: String?
+
+    /**
+     * The driver class name, use [driver] to specify a driver class.
+     */
+    var driverClassName: String?
+
+    /**
+     * The driver class. Has no backing property, just a convenience accessor for [driverClassName].
+     */
+    var driver: KClass<*>
+        get() = Class.forName(driverClassName ?: throw UnsupportedOperationException("Driver class name must be set")).kotlin
+        set(value) {
+            driverClassName = value.qualifiedName
+        }
+
+    /**
+     * Builds the [Database].
+     *
+     * @return the database
+     */
+    fun build(): Database
+}
+
+internal class DatabaseBuilderImpl(
+    override var connectionUrl: String? = null,
+    override var driverClassName: String? = null
+) : DatabaseBuilder {
+    override fun build(): Database = Database.connect(
+        connectionUrl ?: throw IllegalArgumentException("Connection URL not specified"),
+        driver = driverClassName
+    )
+}
+
+/**
+ * Creates a [Database] instance with a builder.
+ *
+ * @param block the builder mutator
+ * @return the database
+ */
+fun database(block: DatabaseBuilder.() -> Unit): Database = DatabaseBuilderImpl().also(block).build()

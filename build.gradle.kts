@@ -123,7 +123,7 @@ fun Project.applyDokka() {
     if (rootProject != this@applyDokka) {
         tasks.withType<AbstractDokkaLeafTask> {
             dokkaSourceSets.configureEach {
-                includes.fromIfExists(this@applyDokka, "src/dokka-symbols.md")
+                includes.fromIfExists(this@applyDokka, "README.md")
             }
         }
     }
