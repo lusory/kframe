@@ -4,5 +4,7 @@ include(
     "core",
     "annotation",
     "plugin",
-    "data-ktorm"
+    "data-ktorm",
+    "library-annotation",
+    "library-plugin"
 )

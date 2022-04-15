@@ -184,6 +184,7 @@ Using the plugin is highly recommended, but you can also do it in plain Gradle.
 
 ```kotlin
 import java.util.Base64
+import java.util.zip.ZipFile
 
 plugins {
     id("com.github.johnrengelman.shadow") version "7.1.2"
@@ -227,11 +228,11 @@ afterEvaluate {
     configurations.getByName("compileClasspath").resolvedConfiguration.resolvedArtifacts.forEach { artifact ->
         ZipFile(artifact.file).use { zipFile ->
             zipFile.entries().iterator().forEach { entry ->
-                if (entry.name.substringAfterLast('/') == "kframe.properties") {
+                if (entry.name.substringAfterLast('/') == "inject.properties") {
                     val props: Properties = Properties().also { it.load(zipFile.getInputStream(entry)) }
-                    members.addAll((props["inject.members"] as? String ?: "").split(',').toMutableList().apply { clearIfEmptyStr() })
-                    classes.addAll((props["inject.classes"] as? String ?: "").split(',').toMutableList().apply { clearIfEmptyStr() })
-                    listeners.addAll((props["inject.listeners"] as? String ?: "").split(',').toMutableList().apply { clearIfEmptyStr() })
+                    members.addAll((props["members"] as? String ?: "").split(',').toMutableList().apply { clearIfEmptyStr() })
+                    classes.addAll((props["classes"] as? String ?: "").split(',').toMutableList().apply { clearIfEmptyStr() })
+                    listeners.addAll((props["listeners"] as? String ?: "").split(',').toMutableList().apply { clearIfEmptyStr() })
                 }
             }
         }

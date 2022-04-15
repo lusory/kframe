@@ -84,11 +84,11 @@ class KFramePlugin : Plugin<Project> {
             target.configurations.getByName("compileClasspath").resolvedConfiguration.resolvedArtifacts.forEach { artifact ->
                 ZipFile(artifact.file).use { zipFile ->
                     zipFile.entries().iterator().forEach { entry ->
-                        if (entry.name.substringAfterLast('/') == "kframe.properties") {
+                        if (entry.name.substringAfterLast('/') == "inject.properties") {
                             val props: Properties = Properties().also { it.load(zipFile.getInputStream(entry)) }
-                            members.addAll((props["inject.members"] as? String ?: "").split(',').toMutableList().apply { clearIfEmptyStr() })
-                            classes.addAll((props["inject.classes"] as? String ?: "").split(',').toMutableList().apply { clearIfEmptyStr() })
-                            listeners.addAll((props["inject.listeners"] as? String ?: "").split(',').toMutableList().apply { clearIfEmptyStr() })
+                            members.addAll((props["members"] as? String ?: "").split(',').toMutableList().apply { clearIfEmptyStr() })
+                            classes.addAll((props["classes"] as? String ?: "").split(',').toMutableList().apply { clearIfEmptyStr() })
+                            listeners.addAll((props["listeners"] as? String ?: "").split(',').toMutableList().apply { clearIfEmptyStr() })
                         }
                     }
                 }

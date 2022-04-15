@@ -19,9 +19,9 @@ package me.lusory.kframe.util
 
 import java.io.File
 import java.io.FileInputStream
+import java.nio.ByteOrder
 import java.security.MessageDigest
 import java.util.*
-import javax.xml.bind.DatatypeConverter
 
 /**
  * Encodes this string to Base64.
@@ -64,13 +64,79 @@ fun File.computeHash(type: String, bufferSize: Int = 1024): ByteArray {
     return digest.digest()
 }
 
+// https://stackoverflow.com/a/58118078
+private val LOOKUP_TABLE_LOWER = charArrayOf(
+    0x30.toChar(),
+    0x31.toChar(),
+    0x32.toChar(),
+    0x33.toChar(),
+    0x34.toChar(),
+    0x35.toChar(),
+    0x36.toChar(),
+    0x37.toChar(),
+    0x38.toChar(),
+    0x39.toChar(),
+    0x61.toChar(),
+    0x62.toChar(),
+    0x63.toChar(),
+    0x64.toChar(),
+    0x65.toChar(),
+    0x66.toChar()
+)
+
+private val LOOKUP_TABLE_UPPER = charArrayOf(
+    0x30.toChar(),
+    0x31.toChar(),
+    0x32.toChar(),
+    0x33.toChar(),
+    0x34.toChar(),
+    0x35.toChar(),
+    0x36.toChar(),
+    0x37.toChar(),
+    0x38.toChar(),
+    0x39.toChar(),
+    0x41.toChar(),
+    0x42.toChar(),
+    0x43.toChar(),
+    0x44.toChar(),
+    0x45.toChar(),
+    0x46.toChar()
+)
+
 /**
- * Converts this byte array to a hex string using [DatatypeConverter].
+ * Converts this byte array to a hex string.
+ *
+ * @param upperCase should the hex string be uppercase?
+ * @param byteOrder the endianness of this byte array
+ * @return the hex string
+ * @since 0.0.1
+ */
+fun ByteArray.toHexBinary(upperCase: Boolean, byteOrder: ByteOrder): String {
+    // our output size will be exactly 2x byte-array length
+    val buffer = CharArray(size * 2)
+
+    // choose lower or uppercase lookup table
+    val lookup = if (upperCase) LOOKUP_TABLE_UPPER else LOOKUP_TABLE_LOWER
+    var index: Int
+    for (i in indices) {
+        // for little endian we count from last to first
+        index = if (byteOrder == ByteOrder.BIG_ENDIAN) i else size - i - 1
+
+        // extract the upper 4 bit and look up char (0-A)
+        buffer[i shl 1] = lookup[this[index].toInt() shr 4 and 0xF]
+        // extract the lower 4 bit and look up char (0-A)
+        buffer[(i shl 1) + 1] = lookup[this[index].toInt() and 0xF]
+    }
+    return String(buffer)
+}
+
+/**
+ * Converts this byte array to a hex string.
  *
  * @return the hex string
  * @since 0.0.1
  */
-fun ByteArray.toHexBinary(): String = DatatypeConverter.printHexBinary(this)
+fun ByteArray.toHexBinary(): String = toHexBinary(false, ByteOrder.BIG_ENDIAN)
 
 /**
  * Computes a MD5 hash of the contents of this file.
