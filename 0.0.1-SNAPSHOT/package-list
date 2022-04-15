@@ -11,5 +11,9 @@ me.lusory.kframe.inject
 me.lusory.kframe.util
 module:data-ktorm
 me.lusory.kframe.data.ktorm
+module:library-annotation
+me.lusory.kframe.processor.library
+module:library-plugin
+me.lusory.kframe.gradle.plugin.library
 module:plugin
 me.lusory.kframe.gradle.plugin
