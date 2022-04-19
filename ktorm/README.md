@@ -2,7 +2,7 @@
 
 ktorm integration root package, a part of the data-ktorm module
 
-# Module data-ktorm
+# Module ktorm
 
 A ktorm interop module for KFrame
 
