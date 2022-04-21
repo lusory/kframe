@@ -31,6 +31,7 @@ class KFrameLibraryPlugin : Plugin<Project> {
     override fun apply(target: Project) {
         target.pluginManager.apply(KspGradleSubplugin::class.java)
 
+        target.dependencies.add("implementation", "me.lusory.kframe:core:${BuildInfo.VERSION}")
         target.dependencies.add("ksp", "me.lusory.kframe:annotation-library:${BuildInfo.VERSION}")
     }
 }

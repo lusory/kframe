@@ -20,7 +20,7 @@ An application base, carrying the essential classes
 
 ## Features
 - Compile-time dependency injection
-- JVM events
+- Application events
 - Argument parsing
 
 ### Dependency injection
@@ -52,23 +52,25 @@ class TestComponent1 {
 }
 ```
 
-### JVM events
+### Application events
 
-The `@On` annotation can mark a function to run:
- - After the application context has been built (`CONTEXT_CREATED`)
- - After the JVM received an interrupt/quit signal (`SHUTDOWN`)
+The `@Init` annotation can mark a function to run after the `ApplicationContext` has been built.
 
 The function can be a part of a component or a top-level function, and it can accept zero or one parameter of type `ApplicationContext`.
 
+A `shutdownHook` lambda is provided for convenience, this is a shortcut for `Runtime#addShutdownHook`.
+
 ```kt
-\@On(Action.CONTEXT_CREATED)
+\@Init
 fun contextCreated() = println("Context created!")
 
 \@Component
 class Component0 {
-    \@On(Action.SHUTDOWN)
-    fun cleanup(context: ApplicationContext) {
-        // cleanup logic
+    \@Init
+    fun setupCleanup(context: ApplicationContext) {
+        shutdownHook {
+            // cleanup logic
+        }
     }
 }
 ```
@@ -224,7 +226,7 @@ tasks.withType<Jar> {
 afterEvaluate {
     val members: MutableSet<String> = mutableSetOf()
     val classes: MutableSet<String> = mutableSetOf()
-    val listeners: MutableSet<String> = mutableSetOf()
+    val inits: MutableSet<String> = mutableSetOf()
     configurations.getByName("compileClasspath").resolvedConfiguration.resolvedArtifacts.forEach { artifact ->
         ZipFile(artifact.file).use { zipFile ->
             zipFile.entries().iterator().forEach { entry ->
@@ -232,7 +234,7 @@ afterEvaluate {
                     val props: Properties = Properties().also { it.load(zipFile.getInputStream(entry)) }
                     members.addAll((props["members"] as? String ?: "").split(',').toMutableList().apply { clearIfEmptyStr() })
                     classes.addAll((props["classes"] as? String ?: "").split(',').toMutableList().apply { clearIfEmptyStr() })
-                    listeners.addAll((props["listeners"] as? String ?: "").split(',').toMutableList().apply { clearIfEmptyStr() })
+                    inits.addAll((props["inits"] as? String ?: "").split(',').toMutableList().apply { clearIfEmptyStr() })
                 }
             }
         }
@@ -242,7 +244,7 @@ afterEvaluate {
         // https://github.com/google/ksp/issues/154
         arg("injectMembers", members.joinToString(",").toBase64())
         arg("injectClasses", classes.joinToString(",").toBase64())
-        arg("injectListeners", listeners.joinToString(",").toBase64())
+        arg("injectInits", inits.joinToString(",").toBase64())
     }
 }
 

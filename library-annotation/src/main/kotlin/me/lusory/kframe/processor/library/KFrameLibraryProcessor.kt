@@ -43,7 +43,7 @@ class KFrameLibraryProcessor(private val environment: SymbolProcessorEnvironment
 
         val members: MutableSet<String> = mutableSetOf()
         val classes: MutableSet<String> = mutableSetOf()
-        val listeners: Set<String> = resolver.getSymbolsWithAnnotation("me.lusory.kframe.inject.On")
+        val inits: Set<String> = resolver.getSymbolsWithAnnotation("me.lusory.kframe.inject.Init")
             .filter { it is KSFunctionDeclaration && (it.functionKind == FunctionKind.TOP_LEVEL || it.functionKind == FunctionKind.MEMBER) }
             .also { l -> deps.addAll(l.map { it.containingFile!! }) }
             .map { (it as KSFunctionDeclaration).qualifiedName!!.asString() }
@@ -68,8 +68,8 @@ class KFrameLibraryProcessor(private val environment: SymbolProcessorEnvironment
         if (classes.isNotEmpty()) {
             lines.add("classes=${classes.joinToString(",")}")
         }
-        if (listeners.isNotEmpty()) {
-            lines.add("listeners=${listeners.joinToString(",")}")
+        if (inits.isNotEmpty()) {
+            lines.add("inits=${inits.joinToString(",")}")
         }
 
         environment.codeGenerator.createNewFile(Dependencies(true, *deps.toTypedArray()), "", "inject", "properties")

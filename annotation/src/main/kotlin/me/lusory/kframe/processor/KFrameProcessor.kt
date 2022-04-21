@@ -72,14 +72,6 @@ class KFrameProcessor(private val environment: SymbolProcessorEnvironment) : Sym
         )
         val backlog: MutableList<BacklogItem> = mutableListOf()
 
-        // TODO: replace with https://github.com/google/ksp/issues/431
-        val listeners: List<KSAnnotated> = resolver.getSymbolsWithAnnotation("me.lusory.kframe.inject.On").toMutableList().apply {
-            addAll(
-                (environment.options["injectListeners"] ?: "").fromBase64().split(',').toMutableList().apply { clearIfEmptyStr() }
-                    .flatMap { resolver.getFunctionDeclarationsByName(resolver.getKSNameFromString(it), includeTopLevel = true) }
-            )
-        }
-
         resolver.getSymbolsWithAnnotation("me.lusory.kframe.inject.Component").toMutableList()
             .apply {
                 // TODO: replace with https://github.com/google/ksp/issues/431
@@ -207,30 +199,19 @@ class KFrameProcessor(private val environment: SymbolProcessorEnvironment) : Sym
             }
         }
 
-        if (listeners.isNotEmpty()) {
-            val initListeners: MutableList<KSAnnotated> = mutableListOf()
-            val closeListeners: MutableList<KSAnnotated> = mutableListOf()
+        val inits: List<KSAnnotated> = resolver.getSymbolsWithAnnotation("me.lusory.kframe.inject.Init").toMutableList().apply {
+            // TODO: replace with https://github.com/google/ksp/issues/431
+            addAll(
+                (environment.options["injectInits"] ?: "").fromBase64().split(',').toMutableList().apply { clearIfEmptyStr() }
+                    .flatMap { resolver.getFunctionDeclarationsByName(resolver.getKSNameFromString(it), includeTopLevel = true) }
+            )
+            sortedBy { it.getAnnotationsByType("me.lusory.kframe.inject.Init").first().arguments.first { arg -> arg.name?.asString() == "priority" }.value as Int }
+        }
 
-            listeners.forEach { symbol ->
-                val onAnnotation: KSAnnotation = symbol.getAnnotationsByType("me.lusory.kframe.inject.On").first()
-                if (onAnnotation.hasEnumArgument("action", "CONTEXT_CREATE")) {
-                    initListeners.add(symbol)
-                } else if (onAnnotation.hasEnumArgument("action", "SHUTDOWN")) {
-                    closeListeners.add(symbol)
-                }
-            }
-
+        if (inits.isNotEmpty()) {
             mainBuilder.beginControlFlow("afterBuild { context ->")
 
-            initListeners.forEach { mainBuilder.listenerCall(it, vars) }
-
-            if (closeListeners.isNotEmpty()) {
-                mainBuilder.beginControlFlow("%M", MemberName("me.lusory.kframe.inject", "shutdownHook"))
-
-                closeListeners.forEach { mainBuilder.listenerCall(it, vars) }
-
-                mainBuilder.endControlFlow()
-            }
+            inits.forEach { mainBuilder.listenerCall(it, vars) }
 
             mainBuilder.endControlFlow()
         }
@@ -267,7 +248,7 @@ class KFrameProcessor(private val environment: SymbolProcessorEnvironment) : Sym
                 } else if (symbol.parameters.isEmpty()) {
                     addStatement("%M()", memberName)
                 } else {
-                    throw IllegalArgumentException("@Listen annotated methods must accept zero parameters or only one of type ApplicationContext")
+                    throw IllegalArgumentException("@Init annotated methods must accept zero parameters or only one of type ApplicationContext")
                 }
             } else if (symbol.functionKind == FunctionKind.MEMBER) {
                 val parentClassName: String = (symbol.parentDeclaration as? KSClassDeclaration)!!.qualifiedName!!.asString()
@@ -275,7 +256,7 @@ class KFrameProcessor(private val environment: SymbolProcessorEnvironment) : Sym
                     ?.filter { !it.second } // filter non-singletons
 
                 if (memberVars == null) {
-                    environment.logger.warn("Listener method ${symbol.simpleName} found for non-component type $parentClassName")
+                    environment.logger.warn("Initializer method ${symbol.simpleName} found for non-component type $parentClassName")
                     return
                 }
 
@@ -285,16 +266,14 @@ class KFrameProcessor(private val environment: SymbolProcessorEnvironment) : Sym
                     } else if (symbol.parameters.isEmpty()) {
                         addStatement("${memberVar.first}.${symbol.simpleName}()")
                     } else {
-                        throw IllegalArgumentException("@Listen annotated methods must accept zero parameters or only one of type ApplicationContext")
+                        throw IllegalArgumentException("@Init annotated methods must accept zero parameters or only one of type ApplicationContext")
                     }
                 }
             } else {
-                throw UnsupportedOperationException("Only top-level or component member functions can be annotated with @Listen")
+                throw UnsupportedOperationException("Only top-level or component member functions can be annotated with @Init")
             }
         }
     }
-
-    private fun KSAnnotation.hasEnumArgument(name: String, enumEntry: String): Boolean = arguments.any { it.name!!.asString() == name && (it.value as KSType).declaration.simpleName.asString() == enumEntry }
 
     private fun KSAnnotated.isAnnotationPresent(qualifiedName: String): Boolean {
         val simpleName: String = qualifiedName.substringAfterLast('.')

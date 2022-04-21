@@ -18,32 +18,35 @@
 package me.lusory.kframe.inject
 
 /**
- * Marks a top-level or a class function to run when the specified action is ran.
+ * Marks a top-level or a class function to run when the [ApplicationContext] is built.
  *
- * @param action the action
+ * Handler invocation order is specified by the [priority] parameter, the higher it is, the earlier it is invoked.
+ *
+ * @param priority the initialization priority, can be custom or from [InitPriority]
  *
  * @since 0.0.1
  */
 @Target(AnnotationTarget.FUNCTION)
 @Retention(AnnotationRetention.RUNTIME)
 @MustBeDocumented
-annotation class On(val action: Action)
+annotation class Init(val priority: Int = InitPriority.NORMAL)
 
 /**
- * Actions for the [On] annotation.
+ * Predefined initialization priorities for [Init].
  */
-enum class Action {
+object InitPriority {
     /**
-     * The [ApplicationContext] was created.
-     *
-     * @since 0.0.1
+     * Low priority.
      */
-    CONTEXT_CREATE,
+    const val LOW = -1
 
     /**
-     * The JVM received an interrupt/quit signal.
-     *
-     * @since 0.0.1
+     * Normal priority.
      */
-    SHUTDOWN
+    const val NORMAL = 0
+
+    /**
+     * High priority.
+     */
+    const val HIGH = 1
 }

@@ -80,7 +80,7 @@ class KFramePlugin : Plugin<Project> {
         target.afterEvaluate {
             val members: MutableSet<String> = mutableSetOf()
             val classes: MutableSet<String> = mutableSetOf()
-            val listeners: MutableSet<String> = mutableSetOf()
+            val inits: MutableSet<String> = mutableSetOf()
             target.configurations.getByName("compileClasspath").resolvedConfiguration.resolvedArtifacts.forEach { artifact ->
                 ZipFile(artifact.file).use { zipFile ->
                     zipFile.entries().iterator().forEach { entry ->
@@ -88,7 +88,7 @@ class KFramePlugin : Plugin<Project> {
                             val props: Properties = Properties().also { it.load(zipFile.getInputStream(entry)) }
                             members.addAll((props["members"] as? String ?: "").split(',').toMutableList().apply { clearIfEmptyStr() })
                             classes.addAll((props["classes"] as? String ?: "").split(',').toMutableList().apply { clearIfEmptyStr() })
-                            listeners.addAll((props["listeners"] as? String ?: "").split(',').toMutableList().apply { clearIfEmptyStr() })
+                            inits.addAll((props["inits"] as? String ?: "").split(',').toMutableList().apply { clearIfEmptyStr() })
                         }
                     }
                 }
@@ -98,7 +98,7 @@ class KFramePlugin : Plugin<Project> {
                 // https://github.com/google/ksp/issues/154
                 ext.arg("injectMembers", members.joinToString(",").toBase64())
                 ext.arg("injectClasses", classes.joinToString(",").toBase64())
-                ext.arg("injectListeners", listeners.joinToString(",").toBase64())
+                ext.arg("injectInits", inits.joinToString(",").toBase64())
             }
         }
     }
