@@ -1,3 +1,6 @@
+@file:Suppress("RemoveRedundantQualifierName")
+
+import me.lusory.kframe.gradle.DependencyVersions
 import me.lusory.kframe.gradle.addPublication
 import me.lusory.kframe.gradle.applyDokka
 import me.lusory.kframe.gradle.publish
@@ -50,6 +53,7 @@ subprojects {
         // added by user
         compileOnly(kotlin("stdlib"))
         compileOnly(kotlin("reflect"))
+        compileOnly(group = "org.jetbrains.kotlinx", name = "kotlinx-coroutines-core", version = DependencyVersions.COROUTINES_CORE)
     }
 
     configure<PublishingExtension> {
