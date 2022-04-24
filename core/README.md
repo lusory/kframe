@@ -14,6 +14,10 @@ Dependency injection API, a part of the core module
 
 Miscellaneous utilities, a part of the core module
 
+# Package me.lusory.kframe.util.log
+
+Logging related utilities, a part of the core module
+
 # Module core
 
 An application base, carrying the essential classes

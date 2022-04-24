@@ -17,9 +17,8 @@
 
 package me.lusory.kframe.data.ktorm
 
-import mu.KotlinLogging
 import org.ktorm.database.Database
-import org.ktorm.logging.Slf4jLoggerAdapter
+import org.tinylog.kotlin.Logger
 import kotlin.reflect.KClass
 
 /**
@@ -76,8 +75,60 @@ internal class DatabaseBuilderImpl(
         user = user,
         password = password,
         driver = driverClassName,
-        logger = Slf4jLoggerAdapter(KotlinLogging.logger {})
+        logger = TinylogLoggerAdapter()
     )
+}
+
+internal class TinylogLoggerAdapter : org.ktorm.logging.Logger {
+    override fun debug(msg: String, e: Throwable?) {
+        if (e != null) {
+            Logger.debug(e, msg)
+        } else {
+            Logger.debug(msg)
+        }
+    }
+
+    override fun error(msg: String, e: Throwable?) {
+        if (e != null) {
+            Logger.error(e, msg)
+        } else {
+            Logger.error(msg)
+        }
+    }
+
+    override fun info(msg: String, e: Throwable?) {
+        if (e != null) {
+            Logger.info(e, msg)
+        } else {
+            Logger.info(msg)
+        }
+    }
+
+    override fun isDebugEnabled(): Boolean = Logger.isDebugEnabled()
+
+    override fun isErrorEnabled(): Boolean = Logger.isErrorEnabled()
+
+    override fun isInfoEnabled(): Boolean = Logger.isInfoEnabled()
+
+    override fun isTraceEnabled(): Boolean = Logger.isTraceEnabled()
+
+    override fun isWarnEnabled(): Boolean = Logger.isWarnEnabled()
+
+    override fun trace(msg: String, e: Throwable?) {
+        if (e != null) {
+            Logger.trace(e, msg)
+        } else {
+            Logger.trace(msg)
+        }
+    }
+
+    override fun warn(msg: String, e: Throwable?) {
+        if (e != null) {
+            Logger.warn(e, msg)
+        } else {
+            Logger.warn(msg)
+        }
+    }
 }
 
 /**
@@ -86,4 +137,4 @@ internal class DatabaseBuilderImpl(
  * @param block the builder mutator
  * @return the database
  */
-fun database(block: DatabaseBuilder.() -> Unit): Database = DatabaseBuilderImpl().also(block).build()
+fun database(block: DatabaseBuilder.() -> Unit): Database = DatabaseBuilderImpl().apply(block).build()

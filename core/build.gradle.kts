@@ -9,8 +9,10 @@ plugins {
 }
 
 dependencies {
-    api(group = "io.github.microutils", name = "kotlin-logging-jvm", version = DependencyVersions.KT_LOGGING)
-    runtimeOnly(group = "org.slf4j", name = "slf4j-simple", version = DependencyVersions.SLF4J)
+    api(group = "org.tinylog", name = "tinylog-api-kotlin", version = DependencyVersions.TINYLOG) {
+        exclude(group = "org.jetbrains.kotlin")
+    }
+    runtimeOnly(group = "org.tinylog", name = "tinylog-impl", version = DependencyVersions.TINYLOG)
 
     ksp(project(":library-annotation"))
 }

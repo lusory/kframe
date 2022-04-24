@@ -17,6 +17,8 @@
 
 package me.lusory.kframe.inject
 
+import me.lusory.kframe.util.InternalAPI
+
 /**
  * Marks a top-level or a class function to run when the [ApplicationContext] is built.
  *
@@ -49,4 +51,16 @@ object InitPriority {
      * High priority.
      */
     const val HIGH = 1
+
+    /**
+     * Internal initialization priority, used for registering internal shutdown hooks etc.
+     */
+    @InternalAPI
+    const val INTERNAL_LOW = -10
+
+    /**
+     * Internal initialization priority, used for initializing loggers etc.
+     */
+    @InternalAPI
+    const val INTERNAL_HIGH = 10
 }
