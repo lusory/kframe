@@ -1,4 +1,5 @@
 import me.lusory.kframe.gradle.DependencyVersions
+import me.lusory.kframe.gradle.publish
 
 plugins {
     id("com.gradle.plugin-publish") version "0.21.0"
@@ -32,3 +33,5 @@ buildConfig {
         buildConfigField("String", "VERSION", "\"${version as String}\"")
     }
 }
+
+publish = false // publication is added via gradle plugin

@@ -1,6 +1,5 @@
 import me.lusory.kframe.gradle.DependencyVersions
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
-import me.lusory.kframe.gradle.addPublication
 
 dependencies {
     implementation(group = "com.google.devtools.ksp", name = "symbol-processing-api", version = DependencyVersions.KSP)
@@ -13,5 +12,3 @@ tasks.withType<KotlinCompile> {
         freeCompilerArgs = freeCompilerArgs + "-opt-in=kotlin.RequiresOptIn"
     }
 }
-
-addPublication()

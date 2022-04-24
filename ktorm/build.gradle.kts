@@ -1,5 +1,4 @@
 import me.lusory.kframe.gradle.DependencyVersions
-import me.lusory.kframe.gradle.addPublication
 
 dependencies {
     api(project(":core"))
@@ -7,5 +6,3 @@ dependencies {
         exclude(group = "org.jetbrains.kotlin")
     }
 }
-
-addPublication()

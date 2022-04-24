@@ -1,7 +1,6 @@
 @file:Suppress("RemoveRedundantQualifierName")
 
 import me.lusory.kframe.gradle.DependencyVersions
-import me.lusory.kframe.gradle.addPublication
 import me.lusory.kframe.gradle.enableTests
 
 plugins {
@@ -18,4 +17,3 @@ dependencies {
 }
 
 enableTests()
-addPublication()

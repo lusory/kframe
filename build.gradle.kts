@@ -1,3 +1,6 @@
+import me.lusory.kframe.gradle.addPublication
+import me.lusory.kframe.gradle.applyDokka
+import me.lusory.kframe.gradle.publish
 import org.jetbrains.dokka.gradle.AbstractDokkaLeafTask
 import org.jetbrains.dokka.gradle.AbstractDokkaTask
 import org.jetbrains.dokka.gradle.DokkaMultiModuleTask
@@ -70,12 +73,19 @@ subprojects {
         header(rootProject.file("license_header.txt"))
     }
 
-    applyDokka()
+    afterEvaluate {
+        if (applyDokka) {
+            configureDokka()
+        }
+        if (publish) {
+            addPublication()
+        }
+    }
 }
 
-applyDokka()
+configureDokka()
 
-fun Project.applyDokka() {
+fun Project.configureDokka() {
     dependencies {
         dokkaPlugin(group = "org.jetbrains.dokka", name = "versioning-plugin", version = me.lusory.kframe.gradle.DependencyVersions.DOKKA)
     }
@@ -120,10 +130,10 @@ fun Project.applyDokka() {
         }
     }
 
-    if (rootProject != this@applyDokka) {
+    if (rootProject != this@configureDokka) {
         tasks.withType<AbstractDokkaLeafTask> {
             dokkaSourceSets.configureEach {
-                includes.fromIfExists(this@applyDokka, "README.md")
+                includes.fromIfExists(this@configureDokka, "README.md")
             }
         }
     }

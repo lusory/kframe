@@ -59,3 +59,19 @@ fun Project.enableTests() {
         useJUnitPlatform()
     }
 }
+
+private val DOKKA_PROJECTS: MutableMap<Project, Boolean> = mutableMapOf()
+
+var Project.applyDokka: Boolean
+    get() = DOKKA_PROJECTS[this] ?: true
+    set(value) {
+        DOKKA_PROJECTS[this] = value
+    }
+
+private val PUBLISH_PROJECTS: MutableMap<Project, Boolean> = mutableMapOf()
+
+var Project.publish: Boolean
+    get() = PUBLISH_PROJECTS[this] ?: true
+    set(value) {
+        PUBLISH_PROJECTS[this] = value
+    }
