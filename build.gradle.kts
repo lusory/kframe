@@ -53,7 +53,8 @@ subprojects {
         // added by user
         compileOnly(kotlin("stdlib"))
         compileOnly(kotlin("reflect"))
-        compileOnly(group = "org.jetbrains.kotlinx", name = "kotlinx-coroutines-core", version = DependencyVersions.COROUTINES_CORE)
+
+        api(group = "org.jetbrains.kotlinx", name = "kotlinx-coroutines-jdk8", version = DependencyVersions.COROUTINES_CORE)
     }
 
     configure<PublishingExtension> {
