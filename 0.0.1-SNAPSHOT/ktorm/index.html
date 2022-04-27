@@ -45,7 +45,7 @@ if(savedDarkMode === true){
   <div class="breadcrumbs"></div>
   <div class="cover ">
     <h1 class="cover"><span><span>ktorm</span></span></h1>
-    <div class="platform-hinted UnderCoverText" data-platform-hinted="data-platform-hinted"><div class="content sourceset-depenent-content" data-active="" data-togglable=":ktorm:dokkaHtmlPartial/main"><p class="paragraph">A ktorm interop module for KFrame</p><p class="paragraph">A <code class="lang-kotlin">Database</code> component can be created with the <code class="lang-kotlin">database</code> builder:</p><div class="sample-container"><pre><code class="block lang-kt" theme="idea">@Component<br>fun customerDatabase(props: Properties): Database = database {<br>    connectionUrl = props["your.app.database.customer.url"] as? String<br>        ?: throw RuntimeException("No connection URL specified for customer database")<br>}</code></pre><span class="top-right-position"><span class="copy-icon"></span><div class="copy-popup-wrapper popup-to-left"><span class="copy-popup-icon"></span><span>Content copied to clipboard</span></div></span></div></div></div>
+    <div class="platform-hinted UnderCoverText" data-platform-hinted="data-platform-hinted"><div class="content sourceset-depenent-content" data-active="" data-togglable=":ktorm:dokkaHtmlPartial/main"><p class="paragraph">A ktorm interop module for KFrame, needs Java 11+</p><p class="paragraph">A <code class="lang-kotlin">Database</code> component can be created with the <code class="lang-kotlin">database</code> builder:</p><div class="sample-container"><pre><code class="block lang-kt" theme="idea">@Component<br>fun customerDatabase(props: Properties): Database = database {<br>    jdbcUrl = props["your.app.database.customer.url"] as? String<br>        ?: throw RuntimeException("No connection URL specified for customer database")<br>}</code></pre><span class="top-right-position"><span class="copy-icon"></span><div class="copy-popup-wrapper popup-to-left"><span class="copy-popup-icon"></span><span>Content copied to clipboard</span></div></span></div><p class="paragraph">A <a href="https://github.com/brettwooldridge/HikariCP">HikariCP</a> connection pool is utilized in the builder.</p></div></div>
   </div>
   <h2 class="">Packages</h2>
   <div class="table"><a data-name="-112047457%2FPackages%2F1582066201" anchor-label="me.lusory.kframe.data.ktorm" id="-112047457%2FPackages%2F1582066201" data-filterable-set=":ktorm:dokkaHtmlPartial/main"></a>
@@ -60,7 +60,7 @@ if(savedDarkMode === true){
           <div class="pull-right"></div>
         </div>
         <div><span class="brief-comment"><a data-name="-112047457%2FPackages%2F1582066201" anchor-label="me.lusory.kframe.data.ktorm" id="-112047457%2FPackages%2F1582066201" data-filterable-set=":ktorm:dokkaHtmlPartial/main"></a>
-            <p class="paragraph">ktorm integration root package, a part of the data-ktorm module</p>
+            <p class="paragraph">ktorm integration root package, a part of the ktorm module</p>
           </span></div>
       </div>
     </div>
