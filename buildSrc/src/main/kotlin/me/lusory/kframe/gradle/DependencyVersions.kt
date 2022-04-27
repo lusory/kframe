@@ -12,4 +12,5 @@ object DependencyVersions {
     const val SHADOW = "7.1.2"
     const val TINYLOG = "2.4.1"
     const val KTOR = "2.0.0"
+    const val HIKARI = "5.0.1"
 }

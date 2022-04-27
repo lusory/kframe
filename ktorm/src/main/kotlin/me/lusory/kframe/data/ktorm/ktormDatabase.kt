@@ -17,124 +17,17 @@
 
 package me.lusory.kframe.data.ktorm
 
+import com.zaxxer.hikari.HikariConfig
+import com.zaxxer.hikari.HikariDataSource
 import org.ktorm.database.Database
-import org.tinylog.kotlin.Logger
-import kotlin.reflect.KClass
 
 /**
- * A DSL builder for [Database].
+ * Creates a [Database] instance with a [HikariDataSource].
  *
- * @since 0.0.1
- */
-interface DatabaseBuilder {
-    /**
-     * The JDBC connection string, must not be null on build.
-     */
-    var connectionUrl: String?
-
-    /**
-     * The database user, can be included in [connectionUrl].
-     */
-    var user: String?
-
-    /**
-     * The database password, can be included in [connectionUrl].
-     */
-    var password: String?
-
-    /**
-     * The driver class name, use [driver] to specify a driver class.
-     */
-    var driverClassName: String?
-
-    /**
-     * The driver class. Has no backing property, just a convenience accessor for [driverClassName].
-     */
-    var driver: KClass<*>
-        get() = Class.forName(driverClassName ?: throw UnsupportedOperationException("Driver class name must be set")).kotlin
-        set(value) {
-            driverClassName = value.qualifiedName
-        }
-
-    /**
-     * Builds the [Database].
-     *
-     * @return the database
-     */
-    fun build(): Database
-}
-
-internal class DatabaseBuilderImpl(
-    override var connectionUrl: String? = null,
-    override var user: String? = null,
-    override var password: String? = null,
-    override var driverClassName: String? = null
-) : DatabaseBuilder {
-    override fun build(): Database = Database.connect(
-        connectionUrl ?: throw IllegalArgumentException("Connection URL not specified"),
-        user = user,
-        password = password,
-        driver = driverClassName,
-        logger = TinylogLoggerAdapter()
-    )
-}
-
-internal class TinylogLoggerAdapter : org.ktorm.logging.Logger {
-    override fun debug(msg: String, e: Throwable?) {
-        if (e != null) {
-            Logger.debug(e, msg)
-        } else {
-            Logger.debug(msg)
-        }
-    }
-
-    override fun error(msg: String, e: Throwable?) {
-        if (e != null) {
-            Logger.error(e, msg)
-        } else {
-            Logger.error(msg)
-        }
-    }
-
-    override fun info(msg: String, e: Throwable?) {
-        if (e != null) {
-            Logger.info(e, msg)
-        } else {
-            Logger.info(msg)
-        }
-    }
-
-    override fun isDebugEnabled(): Boolean = Logger.isDebugEnabled()
-
-    override fun isErrorEnabled(): Boolean = Logger.isErrorEnabled()
-
-    override fun isInfoEnabled(): Boolean = Logger.isInfoEnabled()
-
-    override fun isTraceEnabled(): Boolean = Logger.isTraceEnabled()
-
-    override fun isWarnEnabled(): Boolean = Logger.isWarnEnabled()
-
-    override fun trace(msg: String, e: Throwable?) {
-        if (e != null) {
-            Logger.trace(e, msg)
-        } else {
-            Logger.trace(msg)
-        }
-    }
-
-    override fun warn(msg: String, e: Throwable?) {
-        if (e != null) {
-            Logger.warn(e, msg)
-        } else {
-            Logger.warn(msg)
-        }
-    }
-}
-
-/**
- * Creates a [Database] instance with a builder.
- *
- * @param block the builder mutator
+ * @param block the data source configurator
  * @return the database
  */
-fun database(block: DatabaseBuilder.() -> Unit): Database = DatabaseBuilderImpl().apply(block).build()
+inline fun database(block: HikariConfig.() -> Unit): Database = Database.connect(
+    HikariDataSource(HikariConfig().apply(block)),
+    logger = TinylogLoggerAdapter()
+)
