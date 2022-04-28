@@ -10,8 +10,8 @@ A `Database` component can be created with the `database` builder:
 
 ```kt
 \@Component
-fun customerDatabase(props: Properties): Database = database {
-    jdbcUrl = props["your.app.database.customer.url"] as? String
+fun customerDatabase(): Database = database {
+    jdbcUrl = System.getProperty("your.app.database.customer.url") as? String
         ?: throw RuntimeException("No connection URL specified for customer database")
 }
 ```

@@ -19,6 +19,8 @@ package me.lusory.kframe
 
 import me.lusory.kframe.inject.Component
 import me.lusory.kframe.inject.Exact
+import me.lusory.kframe.inject.Init
+import me.lusory.kframe.inject.InitPriority
 import me.lusory.kframe.util.InternalAPI
 import java.util.*
 
@@ -56,7 +58,6 @@ interface ArgumentParser {
      * @return the option value, null if no value was supplied
      */
     operator fun get(vararg names: String): String? = args.firstOrNull { arg -> names.any { arg.name == it } }?.value
-
 }
 
 /**
@@ -89,20 +90,16 @@ data class Argument(
 fun argumentParser(@Exact(name = "args") args: Array<String>): ArgumentParser = ArgumentParserImpl(args)
 
 /**
- * Provides a [Properties] instance populated with long arguments for dependency injection. Should **not** be called manually.
+ * Adds long arguments to system properties.
  *
  * @param argParser an [ArgumentParser] instance
- * @return the properties
  * @suppress API for internal use
  */
-@Component(name = "properties")
-@InternalAPI(note = "use dependency injection to get this instance")
-fun properties(@Exact(name = "argumentParser") argParser: ArgumentParser): Properties = Properties().also { props ->
+@Init(priority = InitPriority.INTERNAL_HIGH)
+fun populateProperties(@Exact(name = "argumentParser") argParser: ArgumentParser) {
     for (arg: Argument in argParser.args) {
         if (arg.isLong) {
-            props.setProperty(arg.name, arg.value)
+            System.setProperty(arg.name, arg.value)
         }
     }
-
-    // TODO: add ClassLoader searching for property files
 }
