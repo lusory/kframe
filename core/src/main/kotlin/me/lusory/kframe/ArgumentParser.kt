@@ -22,6 +22,9 @@ import me.lusory.kframe.inject.Exact
 import me.lusory.kframe.inject.Init
 import me.lusory.kframe.inject.InitPriority
 import me.lusory.kframe.util.InternalAPI
+import me.lusory.kframe.util.getClasspathResource
+import me.lusory.kframe.util.properties
+import me.lusory.kframe.util.property
 import java.util.*
 
 /**
@@ -90,16 +93,28 @@ data class Argument(
 fun argumentParser(@Exact(name = "args") args: Array<String>): ArgumentParser = ArgumentParserImpl(args)
 
 /**
- * Adds long arguments to system properties.
+ * Adds long arguments and a classpath configuration file to system properties.
+ *
+ * The classpath configuration file name can be supplied via the `kframe.configuration.classpath` property, default is `application.properties`.
+ *
+ * Properties provided as long arguments will take precedence before classpath configuration and other system properties.
  *
  * @param argParser an [ArgumentParser] instance
  * @suppress API for internal use
  */
 @Init(priority = InitPriority.INTERNAL_HIGH)
 fun populateProperties(@Exact(name = "argumentParser") argParser: ArgumentParser) {
+    val cmdProps = Properties()
     for (arg: Argument in argParser.args) {
         if (arg.isLong) {
-            System.setProperty(arg.name, arg.value)
+            cmdProps[arg.name] = arg.value
         }
     }
+
+    getClasspathResource(cmdProps["kframe.configuration.classpath"] as? String ?: property("kframe.configuration.classpath") ?: "application.properties")?.let { inputStream ->
+        properties().load(inputStream)
+    }
+
+    // command line supplied properties should take precedence before the classpath configuration
+    properties().putAll(cmdProps)
 }
