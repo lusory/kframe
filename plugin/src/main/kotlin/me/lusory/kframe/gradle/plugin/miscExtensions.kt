@@ -15,23 +15,33 @@
  * limitations under the License.
  */
 
-package me.lusory.kframe.gradle.plugin.library
+package me.lusory.kframe.gradle.plugin
 
-import com.google.devtools.ksp.gradle.KspGradleSubplugin
-import me.lusory.kframe.gradle.BuildInfo
-import org.gradle.api.Plugin
-import org.gradle.api.Project
+import java.util.*
 
 /**
- * The KFrame library Gradle plugin main class, instantiated via the Java Service Loader API.
+ * Clears the collection if all items are logically empty (empty string).
  *
  * @since 0.0.1
  */
-class KFrameLibraryPlugin : Plugin<Project> {
-    override fun apply(target: Project) {
-        target.pluginManager.apply(KspGradleSubplugin::class.java)
+fun MutableCollection<String>.clearIfLogicallyEmpty() = clearIf { it.isEmpty() }
 
-        target.dependencies.add("implementation", "me.lusory.kframe:core:${BuildInfo.VERSION}")
-        target.dependencies.add("ksp", "me.lusory.kframe:annotation-library:${BuildInfo.VERSION}")
+/**
+ * Clears the collection if all items match the supplied predicate.
+ *
+ * @param predicate the predicate
+ * @since 0.0.1
+ */
+inline fun <T> MutableCollection<T>.clearIf(predicate: (T) -> Boolean) {
+    if (all(predicate)) {
+        clear()
     }
 }
+
+/**
+ * Encodes this string to Base64.
+ *
+ * @return the encoded string
+ * @since 0.0.1
+ */
+fun String.toBase64(): String = Base64.getEncoder().encodeToString(encodeToByteArray())

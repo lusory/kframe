@@ -5,8 +5,6 @@ include(
     "annotation",
     "plugin",
     "ktorm",
-    "library-annotation",
-    "library-plugin",
     "ktor-server",
     "ktor-client"
 )

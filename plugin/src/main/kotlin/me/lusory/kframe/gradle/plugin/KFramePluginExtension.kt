@@ -30,6 +30,9 @@ package me.lusory.kframe.gradle.plugin
  *     mainClassName = "Main"
  *     // should kotlin-stdlib and kotlin-reflect be applied to the project automatically (implementation)?
  *     applyKotlin = true
+ *
+ *     // are you making a starter or an application?
+ *     mode = AnnotationProcessorMode.APPLICATION
  * }
  * ```
  *
@@ -38,6 +41,8 @@ package me.lusory.kframe.gradle.plugin
 abstract class KFramePluginExtension {
     /**
      * The fully qualified class name of the generated main class (e.g. kframe.Main).
+     *
+     * Only used in application mode.
      */
     var mainFQClassName: String
         get() = "${mainPackageName}.${mainClassName}"
@@ -48,16 +53,48 @@ abstract class KFramePluginExtension {
 
     /**
      * The package name of the generated main class (e.g. kframe).
+     *
+     * Only used in application mode.
      */
     var mainPackageName: String = "kframe"
 
     /**
      * The simple class name of the generated main class (e.g. Main).
+     *
+     * Only used in application mode.
      */
     var mainClassName: String = "Main"
 
     /**
      * Should kotlin-stdlib and kotlin-reflect be applied to the project automatically (implementation)?
+     *
+     * Only used in application mode.
      */
     var applyKotlin: Boolean = true
+
+    /**
+     * The annotation processor mode.
+     */
+    var mode: AnnotationProcessorMode = AnnotationProcessorMode.APPLICATION
+
+    internal val isApplication: Boolean
+        get() = mode == AnnotationProcessorMode.APPLICATION
+
+    internal val isStarter: Boolean
+        get() = mode == AnnotationProcessorMode.STARTER
+}
+
+/**
+ * Modes for the annotation processor.
+ */
+enum class AnnotationProcessorMode {
+    /**
+     * Starter mode.
+     */
+    STARTER,
+
+    /**
+     * Application mode.
+     */
+    APPLICATION
 }

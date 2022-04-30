@@ -15,30 +15,28 @@
  * limitations under the License.
  */
 
-package me.lusory.kframe.processor.library
+package me.lusory.kframe.processor.impl
 
 import com.google.devtools.ksp.containingFile
 import com.google.devtools.ksp.processing.Dependencies
 import com.google.devtools.ksp.processing.Resolver
-import com.google.devtools.ksp.processing.SymbolProcessor
 import com.google.devtools.ksp.processing.SymbolProcessorEnvironment
-import com.google.devtools.ksp.symbol.*
+import com.google.devtools.ksp.symbol.FunctionKind
+import com.google.devtools.ksp.symbol.KSClassDeclaration
+import com.google.devtools.ksp.symbol.KSFile
+import com.google.devtools.ksp.symbol.KSFunctionDeclaration
+import me.lusory.kframe.processor.KFrameSubprocessor
+import me.lusory.kframe.processor.ProcessorPriority
 
 /**
- * The annotation processor for generating inject.properties files.
- *
- * @param environment the processor environment, passed down from the provider
+ * A subprocessor for generating inject.properties files.
  *
  * @since 0.0.1
  */
-class KFrameLibraryProcessor(private val environment: SymbolProcessorEnvironment) : SymbolProcessor {
-    private var invoked = false
+class InjectPropertiesSubprocessor : KFrameSubprocessor {
+    override val priority: Int = ProcessorPriority.INTERNAL_LOW
 
-    override fun process(resolver: Resolver): List<KSAnnotated> {
-        if (invoked) {
-            return emptyList()
-        }
-
+    override fun process(environment: SymbolProcessorEnvironment, resolver: Resolver) {
         val deps: MutableSet<KSFile> = mutableSetOf()
 
         val members: MutableSet<String> = mutableSetOf()
@@ -63,22 +61,18 @@ class KFrameLibraryProcessor(private val environment: SymbolProcessorEnvironment
         val lines: MutableList<String> = mutableListOf()
 
         if (members.isNotEmpty()) {
-            lines.add("members=${members.joinToString(",")}")
+            lines.add("kframe.dependencyInjection.members=${members.joinToString(",")}")
         }
         if (classes.isNotEmpty()) {
-            lines.add("classes=${classes.joinToString(",")}")
+            lines.add("kframe.dependencyInjection.classes=${classes.joinToString(",")}")
         }
         if (inits.isNotEmpty()) {
-            lines.add("inits=${inits.joinToString(",")}")
+            lines.add("kframe.dependencyInjection.inits=${inits.joinToString(",")}")
         }
 
         environment.codeGenerator.createNewFile(Dependencies(true, *deps.toTypedArray()), "", "inject", "properties")
             .use { outputStream ->
                 outputStream.write(lines.joinToString("\n").encodeToByteArray())
             }
-
-        invoked = true
-
-        return emptyList()
     }
 }

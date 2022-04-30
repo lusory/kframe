@@ -1,0 +1,2 @@
+me.lusory.kframe.processor.impl.DependencyInjectionSubprocessor
+me.lusory.kframe.processor.impl.InjectPropertiesSubprocessor

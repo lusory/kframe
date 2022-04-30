@@ -119,6 +119,8 @@ There is a Gradle plugin provided for convenience, you can be up and running in 
 ##### Kotlin DSL
 
 ```kotlin
+import me.lusory.kframe.gradle.plugin.AnnotationProcessorMode
+
 plugins {
     id("me.lusory.kframe") version "LATEST_VERSION_HERE"
     // make sure to also have the kotlin gradle plugin applied
@@ -142,6 +144,9 @@ kframe {
 
     // should kotlin-stdlib and kotlin-reflect be applied to the project automatically (implementation)?
     applyKotlin = true
+
+    // are you making a starter or an application?
+    mode = AnnotationProcessorMode.APPLICATION
 }
 
 // your build logic
@@ -150,6 +155,8 @@ kframe {
 ##### Groovy DSL
 
 ```groovy
+import me.lusory.kframe.gradle.plugin.AnnotationProcessorMode
+
 plugins {
     id 'me.lusory.kframe' version 'LATEST_VERSION_HERE'
     // make sure to also have the kotlin gradle plugin applied
@@ -177,6 +184,9 @@ kframe {
     
     // should kotlin-stdlib and kotlin-reflect be applied to the project automatically (implementation)?
     applyKotlin = true
+
+    // are you making a starter or an application?
+    mode = AnnotationProcessorMode.APPLICATION
 }
 
 // your build logic
@@ -193,7 +203,7 @@ import java.util.Base64
 import java.util.zip.ZipFile
 
 plugins {
-    id("com.github.johnrengelman.shadow") version "7.1.2"
+    id("com.github.johnrengelman.shadow") version "7.1.2" // only apply if you're making an application
     id("com.google.devtools.ksp") version "1.6.20-1.0.5" // pick the latest KSP version for your Kotlin version (kotlinver-kspver)
     // make sure to also have the kotlin gradle plugin applied
     kotlin("jvm") version "1.6.20"
@@ -210,6 +220,7 @@ dependencies {
     ksp("me.lusory.kframe:annotation:LATEST_VERSION_HERE")
 
     // kotlin-stdlib and kotlin-reflect
+    // make compileOnly if making a starter
     implementation(kotlin("stdlib"))
     implementation(kotlin("reflect"))
 }
@@ -221,6 +232,7 @@ kotlin {
     }
 }
 
+// only apply if you're making an application
 tasks.withType<Jar> {
     manifest {
         attributes["Main-Class"] = "kframe.Main" // sets the main class (generated) for jar outputs
@@ -236,9 +248,9 @@ afterEvaluate {
             zipFile.entries().iterator().forEach { entry ->
                 if (entry.name.substringAfterLast('/') == "inject.properties") {
                     val props: Properties = Properties().also { it.load(zipFile.getInputStream(entry)) }
-                    members.addAll((props["members"] as? String ?: "").split(',').toMutableList().apply { clearIfEmptyStr() })
-                    classes.addAll((props["classes"] as? String ?: "").split(',').toMutableList().apply { clearIfEmptyStr() })
-                    inits.addAll((props["inits"] as? String ?: "").split(',').toMutableList().apply { clearIfEmptyStr() })
+                    members.addAll((props["kframe.dependencyInjection.members"] as? String ?: "").split(',').toMutableList().apply { clearIfLogicallyEmpty() })
+                    classes.addAll((props["kframe.dependencyInjection.classes"] as? String ?: "").split(',').toMutableList().apply { clearIfLogicallyEmpty() })
+                    inits.addAll((props["kframe.dependencyInjection.inits"] as? String ?: "").split(',').toMutableList().apply { clearIfLogicallyEmpty() })
                 }
             }
         }
@@ -246,25 +258,32 @@ afterEvaluate {
 
     ksp {
         // https://github.com/google/ksp/issues/154
-        arg("injectMembers", members.joinToString(",").toBase64())
-        arg("injectClasses", classes.joinToString(",").toBase64())
-        arg("injectInits", inits.joinToString(",").toBase64())
+        arg("kframe.dependencyInjection.members", members.joinToString(",").toBase64())
+        arg("kframe.dependencyInjection.classes", classes.joinToString(",").toBase64())
+        arg("kframe.dependencyInjection.inits", inits.joinToString(",").toBase64())
     }
 }
 
-private fun MutableList<String>.clearIfEmptyStr() {
-    if (size == 1 && get(0).isEmpty()) {
+fun MutableCollection<String>.clearIfLogicallyEmpty() = clearIf { it.isEmpty() }
+
+inline fun <T> MutableCollection<T>.clearIf(predicate: (T) -> Boolean) {
+    if (all(predicate)) {
         clear()
     }
 }
 
-private fun String.toBase64(): String = Base64.getEncoder().encodeToString(encodeToByteArray())
+fun String.toBase64(): String = Base64.getEncoder().encodeToString(encodeToByteArray())
 
 // optional
 
 ksp {
     // sets the main class name for generation
-    arg("packageName", "kframe")
-    arg("className", "Main")
+    arg("kframe.dependencyInjection.packageName", "kframe")
+    arg("kframe.dependencyInjection.className", "Main")
+    
+    // if running an application
+    arg("kframe.dependencyInjection.enabled", "true")
+    // if making a starter
+    // arg("kframe.injectProperties.enabled", "true")
 }
 ```

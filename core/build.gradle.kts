@@ -13,7 +13,11 @@ dependencies {
     }
     runtimeOnly(group = "org.tinylog", name = "tinylog-impl", version = DependencyVersions.TINYLOG)
 
-    ksp(project(":library-annotation"))
+    ksp(project(":annotation"))
+}
+
+ksp {
+    arg("kframe.injectProperties.enabled", "true")
 }
 
 enableTests()

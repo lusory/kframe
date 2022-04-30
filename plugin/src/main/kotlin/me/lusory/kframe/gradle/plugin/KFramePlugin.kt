@@ -47,12 +47,21 @@ class KFramePlugin : Plugin<Project> {
 
         val extension: KFramePluginExtension = target.extensions.create("kframe", KFramePluginExtension::class.java)
 
-        target.pluginManager.apply(ShadowPlugin::class.java)
         target.pluginManager.apply(KspGradleSubplugin::class.java)
 
-        target.extensions.configure(KspExtension::class.java) { ext ->
-            ext.arg("packageName", extension.mainPackageName)
-            ext.arg("className", extension.mainClassName)
+        if (extension.isApplication) {
+            target.pluginManager.apply(ShadowPlugin::class.java)
+
+            target.extensions.configure(KspExtension::class.java) { ext ->
+                ext.arg("kframe.dependencyInjection.packageName", extension.mainPackageName)
+                ext.arg("kframe.dependencyInjection.className", extension.mainClassName)
+            }
+
+            target.tasks.withType(Jar::class.java) { jar ->
+                jar.manifest { manifest ->
+                    manifest.attributes["Main-Class"] = extension.mainFQClassName
+                }
+            }
         }
 
         target.extensions.configure(KotlinJvmProjectExtension::class.java) {
@@ -61,20 +70,14 @@ class KFramePlugin : Plugin<Project> {
             }
         }
 
-        if (extension.applyKotlin) {
+        if (extension.applyKotlin && extension.isApplication) {
             val kotlinVersion: String = target.getKotlinPluginVersion()
             target.dependencies.add("implementation", "org.jetbrains.kotlin:kotlin-stdlib:$kotlinVersion")
             target.dependencies.add("implementation", "org.jetbrains.kotlin:kotlin-reflect:$kotlinVersion")
         }
 
-        target.dependencies.add("implementation", "me.lusory.kframe:core:${BuildInfo.VERSION}")
+        target.dependencies.add(if (extension.isApplication) "implementation" else "compileOnly", "me.lusory.kframe:core:${BuildInfo.VERSION}")
         target.dependencies.add("ksp", "me.lusory.kframe:annotation:${BuildInfo.VERSION}")
-
-        target.tasks.withType(Jar::class.java) { jar ->
-            jar.manifest { manifest ->
-                manifest.attributes["Main-Class"] = extension.mainFQClassName
-            }
-        }
 
         // TODO: replace with https://github.com/google/ksp/issues/431
         target.afterEvaluate {
@@ -86,9 +89,9 @@ class KFramePlugin : Plugin<Project> {
                     zipFile.entries().iterator().forEach { entry ->
                         if (entry.name.substringAfterLast('/') == "inject.properties") {
                             val props: Properties = Properties().also { it.load(zipFile.getInputStream(entry)) }
-                            members.addAll((props["members"] as? String ?: "").split(',').toMutableList().apply { clearIfEmptyStr() })
-                            classes.addAll((props["classes"] as? String ?: "").split(',').toMutableList().apply { clearIfEmptyStr() })
-                            inits.addAll((props["inits"] as? String ?: "").split(',').toMutableList().apply { clearIfEmptyStr() })
+                            members.addAll((props["kframe.dependencyInjection.members"] as? String ?: "").split(',').toMutableList().apply { clearIfLogicallyEmpty() })
+                            classes.addAll((props["kframe.dependencyInjection.classes"] as? String ?: "").split(',').toMutableList().apply { clearIfLogicallyEmpty() })
+                            inits.addAll((props["kframe.dependencyInjection.inits"] as? String ?: "").split(',').toMutableList().apply { clearIfLogicallyEmpty() })
                         }
                     }
                 }
@@ -96,18 +99,14 @@ class KFramePlugin : Plugin<Project> {
 
             target.extensions.configure(KspExtension::class.java) { ext ->
                 // https://github.com/google/ksp/issues/154
-                ext.arg("injectMembers", members.joinToString(",").toBase64())
-                ext.arg("injectClasses", classes.joinToString(",").toBase64())
-                ext.arg("injectInits", inits.joinToString(",").toBase64())
+                ext.arg("kframe.dependencyInjection.members", members.joinToString(",").toBase64())
+                ext.arg("kframe.dependencyInjection.classes", classes.joinToString(",").toBase64())
+                ext.arg("kframe.dependencyInjection.inits", inits.joinToString(",").toBase64())
             }
         }
-    }
 
-    private fun MutableList<String>.clearIfEmptyStr() {
-        if (size == 1 && get(0).isEmpty()) {
-            clear()
+        target.extensions.configure(KspExtension::class.java) { ext ->
+            ext.arg("kframe.${if (extension.isApplication) "dependencyInjection" else "injectProperties"}.enabled", "true")
         }
     }
-
-    private fun String.toBase64(): String = Base64.getEncoder().encodeToString(encodeToByteArray())
 }
