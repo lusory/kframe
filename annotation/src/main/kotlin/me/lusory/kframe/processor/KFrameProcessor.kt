@@ -40,7 +40,7 @@ class KFrameProcessor(private val environment: SymbolProcessorEnvironment) : Sym
 
         environment.logger.info("Loading subprocessors...")
         // specifying the class loader is important
-        ServiceLoader.load(KFrameSubprocessor::class.java, KFrameProcessor::class.java.classLoader)
+        ServiceLoader.load(KFrameSubprocessor::class.java, javaClass.classLoader)
             .sortedBy { it.priority }
             .forEach {
                 if (it.shouldRun(environment)) {
