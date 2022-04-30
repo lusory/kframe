@@ -4,6 +4,7 @@ $dokka.linkExtension:html
 module:annotation
 me.lusory.kframe.processor
 me.lusory.kframe.processor.exceptions
+me.lusory.kframe.processor.impl
 module:core
 me.lusory.kframe
 me.lusory.kframe.exceptions
@@ -11,9 +12,5 @@ me.lusory.kframe.inject
 me.lusory.kframe.util
 module:ktorm
 me.lusory.kframe.data.ktorm
-module:library-annotation
-me.lusory.kframe.processor.library
-module:library-plugin
-me.lusory.kframe.gradle.plugin.library
 module:plugin
 me.lusory.kframe.gradle.plugin
