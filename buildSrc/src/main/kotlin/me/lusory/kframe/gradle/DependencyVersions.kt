@@ -13,4 +13,5 @@ object DependencyVersions {
     const val TINYLOG = "2.4.1"
     const val KTOR = "2.0.0"
     const val HIKARI = "5.0.1"
+    const val H2 = "2.1.212"
 }

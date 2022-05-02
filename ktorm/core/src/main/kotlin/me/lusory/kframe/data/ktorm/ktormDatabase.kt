@@ -19,6 +19,7 @@ package me.lusory.kframe.data.ktorm
 
 import com.zaxxer.hikari.HikariConfig
 import com.zaxxer.hikari.HikariDataSource
+import me.lusory.kframe.data.ktorm.sql.detectMixinDialectImplementation
 import org.ktorm.database.Database
 
 /**
@@ -29,5 +30,6 @@ import org.ktorm.database.Database
  */
 inline fun database(block: HikariConfig.() -> Unit): Database = Database.connect(
     HikariDataSource(HikariConfig().apply(block)),
+    dialect = detectMixinDialectImplementation(),
     logger = TinylogLoggerAdapter()
 )
