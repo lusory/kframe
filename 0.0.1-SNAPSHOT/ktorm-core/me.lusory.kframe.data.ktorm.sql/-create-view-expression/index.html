@@ -1,0 +1,188 @@
+<!doctype html>
+<html>
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1" charset="UTF-8">
+    <title>CreateViewExpression</title>
+<link href="../../../images/logo-icon.svg" rel="icon" type="image/svg">
+    <script>var pathToRoot = "../../../";</script>    <script>const storage = localStorage.getItem("dokka-dark-mode")
+const savedDarkMode = storage ? JSON.parse(storage) : false
+if(savedDarkMode === true){
+    document.getElementsByTagName("html")[0].classList.add("theme-dark")
+}</script>
+<script type="text/javascript" src="../../../scripts/sourceset_dependencies.js" async></script>
+<link href="../../../styles/style.css" rel="Stylesheet">
+<link href="../../../styles/jetbrains-mono.css" rel="Stylesheet">
+<link href="../../../styles/main.css" rel="Stylesheet">
+<link href="../../../styles/prism.css" rel="Stylesheet">
+<link href="../../../styles/logo-styles.css" rel="Stylesheet">
+<script type="text/javascript" src="../../../scripts/clipboard.js" async></script>
+<script type="text/javascript" src="../../../scripts/navigation-loader.js" async></script>
+<script type="text/javascript" src="../../../scripts/platform-content-handler.js" async></script>
+<script type="text/javascript" src="../../../scripts/main.js" defer></script>
+<script type="text/javascript" src="../../../scripts/prism.js" async></script>
+<link href="../../../styles/multimodule.css" rel="Stylesheet">
+<link href="../../../images/logo-icon.svg">
+<link href="../../../styles/style-overrides.css" rel="Stylesheet"></head>
+<body>
+<div class="navigation-wrapper" id="navigation-wrapper">
+    <div id="leftToggler"><span class="icon-toggler"></span></div>
+    <div class="library-name">
+<a href="../../../index.html">
+<span>kframe</span>            </a>    </div>
+    <div>
+<dokka-template-command data="{&quot;@class&quot;:&quot;org.jetbrains.dokka.base.templating.ReplaceVersionsCommand&quot;,&quot;location&quot;:&quot;me.lusory.kframe.data.ktorm.sql/-create-view-expression/index.html&quot;}">0.0.1-SNAPSHOT</dokka-template-command>    </div>
+    <div class="pull-right d-flex">
+        <button id="theme-toggle-button"><span id="theme-toggle"></span></button>
+        <div id="searchBar"></div>
+    </div>
+</div>
+<div id="container">
+    <div id="leftColumn">
+        <div id="sideMenu"></div>
+    </div>
+    <div id="main">
+<div class="main-content" id="content" pageids="ktorm-core::me.lusory.kframe.data.ktorm.sql/CreateViewExpression///PointingToDeclaration//1326944285">
+  <div class="breadcrumbs"><a href="../../index.html">ktorm-core</a><span class="delimiter">/</span><a href="../index.html">me.lusory.kframe.data.ktorm.sql</a><span class="delimiter">/</span><a href="index.html">CreateViewExpression</a></div>
+  <div class="cover ">
+    <h1 class="cover"><span>Create</span><wbr><span>View</span><wbr><span><span>Expression</span></span></h1>
+    <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-depenent-content" data-active="" data-togglable=":ktorm-core:dokkaHtmlPartial/main"><div class="symbol monospace"><span class="token keyword">data </span><span class="token keyword">class </span><a href="index.html">CreateViewExpression</a><span class="token punctuation">(</span><span class="parameters wrapped"><span class="parameter indented">&nbsp;&nbsp;&nbsp;&nbsp;<span class="token keyword">val </span>name<span class="token operator">: </span><a href="../-table-reference-expression/index.html">TableReferenceExpression</a><span class="token punctuation">, </span></span><span class="parameter indented">&nbsp;&nbsp;&nbsp;&nbsp;<span class="token keyword">val </span>query<span class="token operator">: </span><span data-unresolved-link="org.ktorm.expression/SelectExpression///PointingToDeclaration/">SelectExpression</span><span class="token punctuation">, </span></span><span class="parameter indented">&nbsp;&nbsp;&nbsp;&nbsp;<span class="token keyword">val </span>orReplace<span class="token operator">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html">Boolean</a><span class="token operator"> = </span><span class="token boolean">false</span><span class="token punctuation">, </span></span><span class="parameter indented">&nbsp;&nbsp;&nbsp;&nbsp;<span class="token keyword">val </span>isLeafNode<span class="token operator">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html">Boolean</a><span class="token operator"> = </span><span class="token boolean">false</span><span class="token punctuation">, </span></span><span class="parameter indented">&nbsp;&nbsp;&nbsp;&nbsp;<span class="token keyword">val </span>extraProperties<span class="token operator">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.collections/-map/index.html">Map</a><span class="token operator">&lt;</span><span class="token keyword"></span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html">String</a><span class="token punctuation">, </span><span class="token keyword"></span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-any/index.html">Any</a><span class="token operator">&gt;</span><span class="token operator"> = </span>emptyMap()</span></span><span class="token punctuation">)</span> : <span data-unresolved-link="org.ktorm.expression/SqlExpression///PointingToDeclaration/">SqlExpression</span>, <a href="../-reversible-schema-expression/index.html">ReversibleSchemaExpression</a><span class="top-right-position"><span class="copy-icon"></span><div class="copy-popup-wrapper popup-to-left"><span class="copy-popup-icon"></span><span>Content copied to clipboard</span></div></span></div><p class="paragraph">Creates a view.</p></div></div>
+  </div>
+  <div class="tabbedcontent">
+    <div class="tabs-section" tabs-section="tabs-section"><button class="section-tab" data-active="" data-togglable="Constructors">Constructors</button><button class="section-tab" data-togglable="Functions">Functions</button><button class="section-tab" data-togglable="Properties">Properties</button></div>
+    <div class="tabs-section-body">
+      <h2 class="tabbedcontent">Constructors</h2>
+      <div class="table" data-togglable="Constructors"><a data-name="-222276374%2FConstructors%2F1326944285" anchor-label="CreateViewExpression" id="-222276374%2FConstructors%2F1326944285" data-filterable-set=":ktorm-core:dokkaHtmlPartial/main"></a>
+        <div class="table-row" data-filterable-current=":ktorm-core:dokkaHtmlPartial/main" data-filterable-set=":ktorm-core:dokkaHtmlPartial/main">
+          <div class="main-subrow keyValue TabbedContent">
+            <div class=""><span class="inline-flex">
+                <div><a href="-create-view-expression.html"><span>Create</span><wbr><span>View</span><wbr><span><span>Expression</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-222276374%2FConstructors%2F1326944285"></span>
+                  <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                </span></span></div>
+            <div>
+              <div class="title">
+                <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-depenent-content" data-active="" data-togglable=":ktorm-core:dokkaHtmlPartial/main"><div class="symbol monospace"><span class="token keyword"></span><span class="token keyword">fun </span><a href="-create-view-expression.html"><span class="token function">CreateViewExpression</span></a><span class="token punctuation">(</span><span class="parameters wrapped"><span class="parameter indented">&nbsp;&nbsp;&nbsp;&nbsp;name<span class="token operator">: </span><a href="../-table-reference-expression/index.html">TableReferenceExpression</a><span class="token punctuation">, </span></span><span class="parameter indented">&nbsp;&nbsp;&nbsp;&nbsp;query<span class="token operator">: </span><span data-unresolved-link="org.ktorm.expression/SelectExpression///PointingToDeclaration/">SelectExpression</span><span class="token punctuation">, </span></span><span class="parameter indented">&nbsp;&nbsp;&nbsp;&nbsp;orReplace<span class="token operator">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html">Boolean</a><span class="token operator"> = </span><span class="token boolean">false</span><span class="token punctuation">, </span></span><span class="parameter indented">&nbsp;&nbsp;&nbsp;&nbsp;isLeafNode<span class="token operator">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html">Boolean</a><span class="token operator"> = </span><span class="token boolean">false</span><span class="token punctuation">, </span></span><span class="parameter indented">&nbsp;&nbsp;&nbsp;&nbsp;extraProperties<span class="token operator">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.collections/-map/index.html">Map</a><span class="token operator">&lt;</span><span class="token keyword"></span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html">String</a><span class="token punctuation">, </span><span class="token keyword"></span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-any/index.html">Any</a><span class="token operator">&gt;</span><span class="token operator"> = </span>emptyMap()</span></span><span class="token punctuation">)</span><span class="top-right-position"><span class="copy-icon"></span><div class="copy-popup-wrapper popup-to-left"><span class="copy-popup-icon"></span><span>Content copied to clipboard</span></div></span></div></div></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <h2 class="">Functions</h2>
+      <div class="table" data-togglable="Functions"><a data-name="-541633027%2FFunctions%2F1326944285" anchor-label="create" id="-541633027%2FFunctions%2F1326944285" data-filterable-set=":ktorm-core:dokkaHtmlPartial/main"></a>
+        <div class="table-row" data-filterable-current=":ktorm-core:dokkaHtmlPartial/main" data-filterable-set=":ktorm-core:dokkaHtmlPartial/main">
+          <div class="main-subrow keyValue ">
+            <div class=""><span class="inline-flex">
+                <div><a href="create.html"><span><span>create</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-541633027%2FFunctions%2F1326944285"></span>
+                  <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                </span></span></div>
+            <div>
+              <div class="title">
+                <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-depenent-content" data-active="" data-togglable=":ktorm-core:dokkaHtmlPartial/main"><div class="symbol monospace"><span class="token keyword">open </span><span class="token keyword">override </span><span class="token keyword">fun </span><a href="create.html"><span class="token function">create</span></a><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token operator">: </span><span data-unresolved-link="org.ktorm.expression/SqlExpression///PointingToDeclaration/">SqlExpression</span><span class="top-right-position"><span class="copy-icon"></span><div class="copy-popup-wrapper popup-to-left"><span class="copy-popup-icon"></span><span>Content copied to clipboard</span></div></span></div><div class="brief "><p class="paragraph">Makes a <span data-unresolved-link="org.ktorm.expression/SqlExpression///PointingToDeclaration/">SqlExpression</span> that changes the schema.</p></div></div></div>
+              </div>
+            </div>
+          </div>
+        </div>
+<a data-name="-1628827115%2FFunctions%2F1326944285" anchor-label="undo" id="-1628827115%2FFunctions%2F1326944285" data-filterable-set=":ktorm-core:dokkaHtmlPartial/main"></a>
+        <div class="table-row" data-filterable-current=":ktorm-core:dokkaHtmlPartial/main" data-filterable-set=":ktorm-core:dokkaHtmlPartial/main">
+          <div class="main-subrow keyValue ">
+            <div class=""><span class="inline-flex">
+                <div><a href="undo.html"><span><span>undo</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1628827115%2FFunctions%2F1326944285"></span>
+                  <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                </span></span></div>
+            <div>
+              <div class="title">
+                <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-depenent-content" data-active="" data-togglable=":ktorm-core:dokkaHtmlPartial/main"><div class="symbol monospace"><span class="token keyword">open </span><span class="token keyword">override </span><span class="token keyword">fun </span><a href="undo.html"><span class="token function">undo</span></a><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token operator">: </span><a href="../-drop-view-expression/index.html">DropViewExpression</a><span class="top-right-position"><span class="copy-icon"></span><div class="copy-popup-wrapper popup-to-left"><span class="copy-popup-icon"></span><span>Content copied to clipboard</span></div></span></div><div class="brief "><p class="paragraph">Makes a <span data-unresolved-link="org.ktorm.expression/SqlExpression///PointingToDeclaration/">SqlExpression</span> that undoes changes made by <a href="create.html">create</a>.</p></div></div></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <h2 class="">Properties</h2>
+      <div class="table" data-togglable="Properties"><a data-name="1639199614%2FProperties%2F1326944285" anchor-label="extraProperties" id="1639199614%2FProperties%2F1326944285" data-filterable-set=":ktorm-core:dokkaHtmlPartial/main"></a>
+        <div class="table-row" data-filterable-current=":ktorm-core:dokkaHtmlPartial/main" data-filterable-set=":ktorm-core:dokkaHtmlPartial/main">
+          <div class="main-subrow keyValue ">
+            <div class=""><span class="inline-flex">
+                <div><a href="extra-properties.html">extraProperties</a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1639199614%2FProperties%2F1326944285"></span>
+                  <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                </span></span></div>
+            <div>
+              <div class="title">
+                <div class="platform-hinted " data-platform-hinted="data-platform-hinted" data-togglable="Properties"><div class="content sourceset-depenent-content" data-active="" data-togglable=":ktorm-core:dokkaHtmlPartial/main"><a data-name="1639199614%2FProperties%2F1326944285" anchor-label="extraProperties" id="1639199614%2FProperties%2F1326944285" data-filterable-set=":ktorm-core:dokkaHtmlPartial/main"></a><div class="symbol monospace"><span class="token keyword">open </span><span class="token keyword">override </span><span class="token keyword">val </span><a href="extra-properties.html">extraProperties</a><span class="token operator">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.collections/-map/index.html">Map</a><span class="token operator">&lt;</span><span class="token keyword"></span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html">String</a><span class="token punctuation">, </span><span class="token keyword"></span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-any/index.html">Any</a><span class="token operator">&gt;</span><span class="top-right-position"><span class="copy-icon"></span><div class="copy-popup-wrapper popup-to-left"><span class="copy-popup-icon"></span><span>Content copied to clipboard</span></div></span></div></div></div>
+              </div>
+            </div>
+          </div>
+        </div>
+<a data-name="-1212149009%2FProperties%2F1326944285" anchor-label="isLeafNode" id="-1212149009%2FProperties%2F1326944285" data-filterable-set=":ktorm-core:dokkaHtmlPartial/main"></a>
+        <div class="table-row" data-filterable-current=":ktorm-core:dokkaHtmlPartial/main" data-filterable-set=":ktorm-core:dokkaHtmlPartial/main">
+          <div class="main-subrow keyValue ">
+            <div class=""><span class="inline-flex">
+                <div><a href="is-leaf-node.html">isLeafNode</a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1212149009%2FProperties%2F1326944285"></span>
+                  <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                </span></span></div>
+            <div>
+              <div class="title">
+                <div class="platform-hinted " data-platform-hinted="data-platform-hinted" data-togglable="Properties"><div class="content sourceset-depenent-content" data-active="" data-togglable=":ktorm-core:dokkaHtmlPartial/main"><a data-name="-1212149009%2FProperties%2F1326944285" anchor-label="isLeafNode" id="-1212149009%2FProperties%2F1326944285" data-filterable-set=":ktorm-core:dokkaHtmlPartial/main"></a><div class="symbol monospace"><span class="token keyword">open </span><span class="token keyword">override </span><span class="token keyword">val </span><a href="is-leaf-node.html">isLeafNode</a><span class="token operator">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html">Boolean</a><span class="token operator"> = </span><span class="token boolean">false</span><span class="top-right-position"><span class="copy-icon"></span><div class="copy-popup-wrapper popup-to-left"><span class="copy-popup-icon"></span><span>Content copied to clipboard</span></div></span></div></div></div>
+              </div>
+            </div>
+          </div>
+        </div>
+<a data-name="880396878%2FProperties%2F1326944285" anchor-label="name" id="880396878%2FProperties%2F1326944285" data-filterable-set=":ktorm-core:dokkaHtmlPartial/main"></a>
+        <div class="table-row" data-filterable-current=":ktorm-core:dokkaHtmlPartial/main" data-filterable-set=":ktorm-core:dokkaHtmlPartial/main">
+          <div class="main-subrow keyValue ">
+            <div class=""><span class="inline-flex">
+                <div><a href="name.html">name</a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="880396878%2FProperties%2F1326944285"></span>
+                  <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                </span></span></div>
+            <div>
+              <div class="title">
+                <div class="platform-hinted " data-platform-hinted="data-platform-hinted" data-togglable="Properties"><div class="content sourceset-depenent-content" data-active="" data-togglable=":ktorm-core:dokkaHtmlPartial/main"><a data-name="880396878%2FProperties%2F1326944285" anchor-label="name" id="880396878%2FProperties%2F1326944285" data-filterable-set=":ktorm-core:dokkaHtmlPartial/main"></a><div class="symbol monospace"><span class="token keyword"></span><span class="token keyword">val </span><a href="name.html">name</a><span class="token operator">: </span><a href="../-table-reference-expression/index.html">TableReferenceExpression</a><span class="top-right-position"><span class="copy-icon"></span><div class="copy-popup-wrapper popup-to-left"><span class="copy-popup-icon"></span><span>Content copied to clipboard</span></div></span></div><div class="brief "><a data-name="880396878%2FProperties%2F1326944285" anchor-label="name" id="880396878%2FProperties%2F1326944285" data-filterable-set=":ktorm-core:dokkaHtmlPartial/main"></a><p class="paragraph">the name of the view.</p></div></div></div>
+              </div>
+            </div>
+          </div>
+        </div>
+<a data-name="-856489904%2FProperties%2F1326944285" anchor-label="orReplace" id="-856489904%2FProperties%2F1326944285" data-filterable-set=":ktorm-core:dokkaHtmlPartial/main"></a>
+        <div class="table-row" data-filterable-current=":ktorm-core:dokkaHtmlPartial/main" data-filterable-set=":ktorm-core:dokkaHtmlPartial/main">
+          <div class="main-subrow keyValue ">
+            <div class=""><span class="inline-flex">
+                <div><a href="or-replace.html">orReplace</a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-856489904%2FProperties%2F1326944285"></span>
+                  <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                </span></span></div>
+            <div>
+              <div class="title">
+                <div class="platform-hinted " data-platform-hinted="data-platform-hinted" data-togglable="Properties"><div class="content sourceset-depenent-content" data-active="" data-togglable=":ktorm-core:dokkaHtmlPartial/main"><a data-name="-856489904%2FProperties%2F1326944285" anchor-label="orReplace" id="-856489904%2FProperties%2F1326944285" data-filterable-set=":ktorm-core:dokkaHtmlPartial/main"></a><div class="symbol monospace"><span class="token keyword"></span><span class="token keyword">val </span><a href="or-replace.html">orReplace</a><span class="token operator">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html">Boolean</a><span class="token operator"> = </span><span class="token boolean">false</span><span class="top-right-position"><span class="copy-icon"></span><div class="copy-popup-wrapper popup-to-left"><span class="copy-popup-icon"></span><span>Content copied to clipboard</span></div></span></div><div class="brief "><a data-name="-856489904%2FProperties%2F1326944285" anchor-label="orReplace" id="-856489904%2FProperties%2F1326944285" data-filterable-set=":ktorm-core:dokkaHtmlPartial/main"></a><p class="paragraph">if true, just replace any view which already has this name.</p></div></div></div>
+              </div>
+            </div>
+          </div>
+        </div>
+<a data-name="1644958905%2FProperties%2F1326944285" anchor-label="query" id="1644958905%2FProperties%2F1326944285" data-filterable-set=":ktorm-core:dokkaHtmlPartial/main"></a>
+        <div class="table-row" data-filterable-current=":ktorm-core:dokkaHtmlPartial/main" data-filterable-set=":ktorm-core:dokkaHtmlPartial/main">
+          <div class="main-subrow keyValue ">
+            <div class=""><span class="inline-flex">
+                <div><a href="query.html">query</a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1644958905%2FProperties%2F1326944285"></span>
+                  <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                </span></span></div>
+            <div>
+              <div class="title">
+                <div class="platform-hinted " data-platform-hinted="data-platform-hinted" data-togglable="Properties"><div class="content sourceset-depenent-content" data-active="" data-togglable=":ktorm-core:dokkaHtmlPartial/main"><a data-name="1644958905%2FProperties%2F1326944285" anchor-label="query" id="1644958905%2FProperties%2F1326944285" data-filterable-set=":ktorm-core:dokkaHtmlPartial/main"></a><div class="symbol monospace"><span class="token keyword"></span><span class="token keyword">val </span><a href="query.html">query</a><span class="token operator">: </span><span data-unresolved-link="org.ktorm.expression/SelectExpression///PointingToDeclaration/">SelectExpression</span><span class="top-right-position"><span class="copy-icon"></span><div class="copy-popup-wrapper popup-to-left"><span class="copy-popup-icon"></span><span>Content copied to clipboard</span></div></span></div><div class="brief "><a data-name="1644958905%2FProperties%2F1326944285" anchor-label="query" id="1644958905%2FProperties%2F1326944285" data-filterable-set=":ktorm-core:dokkaHtmlPartial/main"></a><p class="paragraph">the query this view shows the results of.</p></div></div></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+        <div class="footer"><span class="go-to-top-icon"><a href="#content" id="go-to-top-link"></a></span><span>© 2022 Copyright lusory contributors</span><span class="pull-right"><span>Generated by </span><a href="https://github.com/Kotlin/dokka"><span>dokka</span><span class="padded-icon"></span></a></span>
+        </div>
+    </div>
+</div>
+
+</body></html>
+

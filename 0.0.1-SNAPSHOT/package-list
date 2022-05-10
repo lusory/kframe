@@ -10,7 +10,10 @@ me.lusory.kframe
 me.lusory.kframe.exceptions
 me.lusory.kframe.inject
 me.lusory.kframe.util
-module:ktorm
+module:ktorm-core
 me.lusory.kframe.data.ktorm
+me.lusory.kframe.data.ktorm.sql
+module:ktorm-mysql
+me.lusory.kframe.data.ktorm.mysql
 module:plugin
 me.lusory.kframe.gradle.plugin
