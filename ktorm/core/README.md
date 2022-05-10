@@ -1,8 +1,12 @@
 # Package me.lusory.kframe.data.ktorm
 
-ktorm integration root package, a part of the ktorm module
+ktorm integration root package, a part of the ktorm-core module
 
-# Module ktorm
+# Package me.lusory.kframe.data.ktorm.sql
+
+Schema generation for ktorm, a part of the ktorm-core module
+
+# Module ktorm-core
 
 A ktorm interop module for KFrame, needs Java 11+
 
