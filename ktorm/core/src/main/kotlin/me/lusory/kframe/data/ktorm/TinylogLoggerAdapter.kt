@@ -15,9 +15,13 @@
  * limitations under the License.
  */
 
+@file:Suppress("PrivatePropertyName")
+
 package me.lusory.kframe.data.ktorm
 
-import org.tinylog.kotlin.Logger
+import org.tinylog.Level
+import org.tinylog.provider.LoggingProvider
+import org.tinylog.provider.ProviderRegistry
 
 /**
  * A [org.ktorm.logging.Logger] implementation for [tinylog](https://github.com/tinylog-org/tinylog).
@@ -25,53 +29,58 @@ import org.tinylog.kotlin.Logger
  * @since 0.0.1
  */
 class TinylogLoggerAdapter : org.ktorm.logging.Logger {
+    private val provider: LoggingProvider = ProviderRegistry.getLoggingProvider()
+
+    // 1 is this
+    // 2 is org.ktorm.logging.Logger$DefaultImpls
+    // 3 is what we need
+    private val STACKTRACE_DEPTH = 3
+
+    private val MINIMUM_LEVEL_COVERS_TRACE = isCoveredByMinimumLevel(Level.TRACE)
+    private val MINIMUM_LEVEL_COVERS_DEBUG = isCoveredByMinimumLevel(Level.DEBUG)
+    private val MINIMUM_LEVEL_COVERS_INFO = isCoveredByMinimumLevel(Level.INFO)
+    private val MINIMUM_LEVEL_COVERS_WARN = isCoveredByMinimumLevel(Level.WARN)
+    private val MINIMUM_LEVEL_COVERS_ERROR = isCoveredByMinimumLevel(Level.ERROR)
+
+    private fun isCoveredByMinimumLevel(level: Level): Boolean = provider.getMinimumLevel(null).ordinal <= level.ordinal
+
     override fun debug(msg: String, e: Throwable?) {
-        if (e != null) {
-            Logger.debug(e, msg)
-        } else {
-            Logger.debug(msg)
+        if (MINIMUM_LEVEL_COVERS_DEBUG) {
+            provider.log(STACKTRACE_DEPTH, null, Level.DEBUG, e, null, msg)
         }
     }
 
     override fun error(msg: String, e: Throwable?) {
-        if (e != null) {
-            Logger.error(e, msg)
-        } else {
-            Logger.error(msg)
+        if (MINIMUM_LEVEL_COVERS_ERROR) {
+            provider.log(STACKTRACE_DEPTH, null, Level.ERROR, e, null, msg)
         }
     }
 
     override fun info(msg: String, e: Throwable?) {
-        if (e != null) {
-            Logger.info(e, msg)
-        } else {
-            Logger.info(msg)
+        if (MINIMUM_LEVEL_COVERS_INFO) {
+            provider.log(STACKTRACE_DEPTH, null, Level.INFO, e, null, msg)
         }
     }
 
     override fun trace(msg: String, e: Throwable?) {
-        if (e != null) {
-            Logger.trace(e, msg)
-        } else {
-            Logger.trace(msg)
+        if (MINIMUM_LEVEL_COVERS_TRACE) {
+            provider.log(STACKTRACE_DEPTH, null, Level.TRACE, e, null, msg)
         }
     }
 
     override fun warn(msg: String, e: Throwable?) {
-        if (e != null) {
-            Logger.warn(e, msg)
-        } else {
-            Logger.warn(msg)
+        if (MINIMUM_LEVEL_COVERS_WARN) {
+            provider.log(STACKTRACE_DEPTH, null, Level.WARN, e, null, msg)
         }
     }
 
-    override fun isDebugEnabled(): Boolean = Logger.isDebugEnabled()
+    override fun isDebugEnabled(): Boolean = MINIMUM_LEVEL_COVERS_DEBUG && provider.isEnabled(STACKTRACE_DEPTH, null, Level.DEBUG)
 
-    override fun isErrorEnabled(): Boolean = Logger.isErrorEnabled()
+    override fun isErrorEnabled(): Boolean = MINIMUM_LEVEL_COVERS_ERROR && provider.isEnabled(STACKTRACE_DEPTH, null, Level.ERROR)
 
-    override fun isInfoEnabled(): Boolean = Logger.isInfoEnabled()
+    override fun isInfoEnabled(): Boolean = MINIMUM_LEVEL_COVERS_INFO && provider.isEnabled(STACKTRACE_DEPTH, null, Level.INFO)
 
-    override fun isTraceEnabled(): Boolean = Logger.isTraceEnabled()
+    override fun isTraceEnabled(): Boolean = MINIMUM_LEVEL_COVERS_TRACE && provider.isEnabled(STACKTRACE_DEPTH, null, Level.TRACE)
 
-    override fun isWarnEnabled(): Boolean = Logger.isWarnEnabled()
+    override fun isWarnEnabled(): Boolean = MINIMUM_LEVEL_COVERS_WARN && provider.isEnabled(STACKTRACE_DEPTH, null, Level.WARN)
 }

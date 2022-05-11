@@ -53,6 +53,11 @@ object InitPriority {
     const val HIGH = 1
 
     /**
+     * Very low priority, intended for blocking the main thread (e.g. starting a web server, server socket).
+     */
+    const val BLOCKING = -20
+
+    /**
      * Internal initialization priority, used for registering internal shutdown hooks etc.
      */
     @InternalAPI

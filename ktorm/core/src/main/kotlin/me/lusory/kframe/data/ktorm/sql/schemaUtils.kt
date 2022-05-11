@@ -37,6 +37,6 @@ fun BaseTable<*>.create(): CreateTableExpression {
 
 fun BaseTable<*>.drop(): DropTableExpression = DropTableExpression(asReferenceExpression())
 
-fun Database.create(table: BaseTable<*>) = executeUpdate(table.create())
+infix fun Database.create(table: BaseTable<*>) = executeUpdate(table.create())
 
-fun Database.drop(table: BaseTable<*>) = executeUpdate(table.drop())
+infix fun Database.drop(table: BaseTable<*>) = executeUpdate(table.drop())

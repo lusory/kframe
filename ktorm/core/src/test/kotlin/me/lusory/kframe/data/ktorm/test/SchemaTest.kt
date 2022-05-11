@@ -44,8 +44,8 @@ class SchemaTest {
 
     @Test
     fun create() {
-        database.create(Departments)
-        database.create(Employees)
+        database create Departments
+        database create Employees
         database.insert(Departments) {
             set(it.id, 0)
             set(it.name, "Test Department")
@@ -57,8 +57,8 @@ class SchemaTest {
             set(it.name, "Bob Boberson")
             set(it.departmentId, 0)
         }
-        database.drop(Employees)
-        database.drop(Departments)
+        database drop Employees
+        database drop Departments
     }
 
     interface Department : Entity<Department> {
@@ -95,7 +95,6 @@ class SchemaTest {
         var address: String
     }
 
-    @Suppress("LeakingThis")
     open class Departments(alias: String?) : Table<Department>("t_department", alias) {
         companion object : Departments(null)
 
@@ -108,7 +107,6 @@ class SchemaTest {
         val mixedCase = varchar("mixedCase").size(128).bindTo { it.mixedCase }
     }
 
-    @Suppress("LeakingThis")
     open class Employees(alias: String?) : Table<Employee>("t_employee", alias) {
         companion object : Employees(null)
 
@@ -124,7 +122,6 @@ class SchemaTest {
         val department = departmentId.referenceTable as Departments
     }
 
-    @Suppress("LeakingThis")
     open class Customers(alias: String?) : Table<Customer>("t_customer", alias, schema = "company") {
         companion object : Customers(null)
 
@@ -137,7 +134,12 @@ class SchemaTest {
         val address = varchar("address").size(512).bindTo { it.address }
     }
 
-    val Database.departments get() = this.sequenceOf(Departments)
-    val Database.employees get() = this.sequenceOf(Employees)
-    val Database.customers get() = this.sequenceOf(Customers)
+    val Database.departments
+        get() = sequenceOf(Departments)
+
+    val Database.employees
+        get() = sequenceOf(Employees)
+
+    val Database.customers
+        get() = sequenceOf(Customers)
 }
