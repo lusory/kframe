@@ -17,6 +17,7 @@
 
 package me.lusory.kframe.gradle.plugin
 
+import org.gradle.api.artifacts.dsl.DependencyHandler
 import java.util.*
 
 /**

@@ -143,10 +143,16 @@ kframe {
     mainClassName = "Main"
 
     // should kotlin-stdlib and kotlin-reflect be applied to the project automatically (implementation)?
+    // only takes effect if mode is APPLICATION
     applyKotlin = true
 
     // are you making a starter or an application?
     mode = AnnotationProcessorMode.APPLICATION
+}
+
+dependencies {
+    // you can add a subprocessor here
+    // kfrProcessor("me.lusory.kframe:annotation:LATEST_VERSION_HERE")
 }
 
 // your build logic
