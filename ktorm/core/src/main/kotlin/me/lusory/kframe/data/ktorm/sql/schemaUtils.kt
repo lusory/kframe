@@ -37,6 +37,30 @@ fun BaseTable<*>.create(): CreateTableExpression {
 
 fun BaseTable<*>.drop(): DropTableExpression = DropTableExpression(asReferenceExpression())
 
+fun Column<*>.add(): AlterTableAddColumnExpression = AlterTableAddColumnExpression(
+    table.asReferenceExpression(),
+    asDeclarationExpression()
+)
+
+fun Column<*>.modify(): AlterTableModifyColumnExpression = AlterTableModifyColumnExpression(
+    table.asReferenceExpression(),
+    asReferenceExpression(),
+    sqlType,
+    size,
+    notNull
+)
+
+fun Column<*>.drop(): AlterTableDropColumnExpression = AlterTableDropColumnExpression(
+    table.asReferenceExpression(),
+    asReferenceExpression()
+)
+
 infix fun Database.create(table: BaseTable<*>) = executeUpdate(table.create())
 
 infix fun Database.drop(table: BaseTable<*>) = executeUpdate(table.drop())
+
+infix fun Database.add(column: Column<*>) = executeUpdate(column.add())
+
+infix fun Database.modify(column: Column<*>) = executeUpdate(column.modify())
+
+infix fun Database.drop(column: Column<*>) = executeUpdate(column.drop())

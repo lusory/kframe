@@ -45,7 +45,7 @@ interface SqlFormatterMixin {
         is CreateTableExpression -> visitCreateTable(expr)
         is DropTableExpression -> visitDropTable(expr)
         is TruncateTableExpression -> visitTruncateTable(expr)
-        is AlterTableAddExpression -> visitAlterTableAdd(expr)
+        is AlterTableAddColumnExpression -> visitAlterTableAdd(expr)
         is AlterTableDropColumnExpression -> visitAlterTableDropColumn(expr)
         is AlterTableModifyColumnExpression -> visitAlterTableModifyColumn(expr)
         is AlterTableSetDefaultExpression -> visitAlterTableSetDefault(expr)
@@ -121,7 +121,7 @@ interface SqlFormatterMixin {
         return expr
     }
 
-    fun visitAlterTableAdd(expr: AlterTableAddExpression): AlterTableAddExpression {
+    fun visitAlterTableAdd(expr: AlterTableAddColumnExpression): AlterTableAddColumnExpression {
         writeKeyword0("alter table ")
         visitTableReference(expr.table)
         writeKeyword0(" add ")

@@ -145,7 +145,7 @@ data class TruncateTableExpression(
  * @property table the table the add a column to
  * @property column the declaration of the column
  */
-data class AlterTableAddExpression(
+data class AlterTableAddColumnExpression(
     val table: TableReferenceExpression,
     val column: ColumnDeclarationExpression<*>,
     override val isLeafNode: Boolean = false,

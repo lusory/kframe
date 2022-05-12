@@ -47,7 +47,7 @@ open class MySqlFormatterMixinImpl(
 
     override fun visit(expr: SqlExpression): SqlExpression = visit0(expr)
 
-    override fun visitAlterTableAdd(expr: AlterTableAddExpression): AlterTableAddExpression {
+    override fun visitAlterTableAdd(expr: AlterTableAddColumnExpression): AlterTableAddColumnExpression {
         writeKeyword("alter table ")
         visitTableReference(expr.table)
         writeKeyword(" add column ")
