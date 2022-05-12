@@ -38,7 +38,8 @@ interface ApplicationContext {
      * @param klass the class
      * @return the component instance, null if not found
      */
-    operator fun get(klass: KClass<*>): Any? = components.firstOrNull { it::class.isSubclassOf(klass) }
+    @Suppress("UNCHECKED_CAST")
+    operator fun <T : Any> get(klass: KClass<out T>): T? = components.firstOrNull { it::class.isSubclassOf(klass) } as? T
 
     /**
      * A DSL builder for [ApplicationContext].
