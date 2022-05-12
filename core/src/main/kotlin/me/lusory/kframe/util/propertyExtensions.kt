@@ -17,6 +17,7 @@
 
 package me.lusory.kframe.util
 
+import java.io.File
 import java.util.*
 
 /**
@@ -35,3 +36,19 @@ fun property(name: String): String? = System.getProperty(name)
  * @since 0.0.1
  */
 fun properties(): Properties = System.getProperties()
+
+/**
+ * Loads a property file, empty if file doesn't exist or is not a file.
+ *
+ * @return the properties
+ * @since 0.0.1
+ */
+fun properties(path: String): Properties = Properties().apply { File(path).also { if (it.isFile) load(it.inputStream()) } }
+
+/**
+ * Loads a .env file in the current working directory.
+ *
+ * @return the properties
+ * @since 0.0.1
+ */
+fun dotenv(): Properties = properties(".env")
