@@ -17,10 +17,7 @@
 
 package me.lusory.kframe
 
-import me.lusory.kframe.inject.Component
-import me.lusory.kframe.inject.Exact
-import me.lusory.kframe.inject.Init
-import me.lusory.kframe.inject.InitPriority
+import me.lusory.kframe.inject.*
 import me.lusory.kframe.util.InternalAPI
 import me.lusory.kframe.util.getClasspathResource
 import me.lusory.kframe.util.properties
@@ -99,13 +96,13 @@ fun argumentParser(@Exact(name = "args") args: Array<String>): ArgumentParser = 
  *
  * Properties provided as long arguments will take precedence before classpath configuration and other system properties.
  *
- * @param argParser an [ArgumentParser] instance
+ * @param context the application context
  * @suppress API for internal use
  */
 @Init(priority = InitPriority.INTERNAL_HIGH)
-fun populateProperties(@Exact(name = "argumentParser") argParser: ArgumentParser) {
+fun populateProperties(context: ApplicationContext) {
     val cmdProps = Properties()
-    for (arg: Argument in argParser.args) {
+    for (arg: Argument in context[ArgumentParser::class]!!.args) {
         if (arg.isLong) {
             cmdProps[arg.name] = arg.value
         }

@@ -200,7 +200,7 @@ class DependencyInjectionSubprocessor : KFrameSubprocessor {
                 (environment.options["kframe.dependencyInjection.inits"] ?: "").fromBase64().split(',').toMutableList().apply { clearIfLogicallyEmpty() }
                     .flatMap { resolver.getFunctionDeclarationsByName(resolver.getKSNameFromString(it), includeTopLevel = true) }
             )
-            sortedBy { it.getAnnotationsByType("me.lusory.kframe.inject.Init").first().arguments.first { arg -> arg.name?.asString() == "priority" }.value as Int }
+            sortedByDescending { it.getAnnotationsByType("me.lusory.kframe.inject.Init").first().arguments.first { arg -> arg.name?.asString() == "priority" }.value as Int }
         }
 
         if (inits.isNotEmpty()) {
@@ -240,7 +240,7 @@ class DependencyInjectionSubprocessor : KFrameSubprocessor {
                 } else if (symbol.parameters.isEmpty()) {
                     addStatement("%M()", memberName)
                 } else {
-                    throw IllegalArgumentException("@Init annotated methods must accept zero parameters or only one of type ApplicationContext")
+                    throw IllegalArgumentException("@Init annotated methods must accept zero parameters or only one of type ApplicationContext ($symbol)")
                 }
             } else if (symbol.functionKind == FunctionKind.MEMBER) {
                 val parentClassName: String = (symbol.parentDeclaration as? KSClassDeclaration)!!.qualifiedName!!.asString()
@@ -258,7 +258,7 @@ class DependencyInjectionSubprocessor : KFrameSubprocessor {
                     } else if (symbol.parameters.isEmpty()) {
                         addStatement("${memberVar.first}.${symbol.simpleName}()")
                     } else {
-                        throw IllegalArgumentException("@Init annotated methods must accept zero parameters or only one of type ApplicationContext")
+                        throw IllegalArgumentException("@Init annotated methods must accept zero parameters or only one of type ApplicationContext ($symbol)")
                     }
                 }
             } else {
