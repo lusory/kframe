@@ -21,6 +21,8 @@ import com.zaxxer.hikari.HikariConfig
 import com.zaxxer.hikari.HikariDataSource
 import me.lusory.kframe.data.ktorm.sql.detectMixinDialectImplementation
 import org.ktorm.database.Database
+import org.ktorm.schema.BaseTable
+import org.ktorm.schema.Column
 
 /**
  * Creates a [Database] instance with a [HikariDataSource].
@@ -33,3 +35,23 @@ inline fun database(block: HikariConfig.() -> Unit): Database = Database.connect
     dialect = detectMixinDialectImplementation(),
     logger = TinylogLoggerAdapter()
 )
+
+/**
+ * Determines if the database contains the supplied table.
+ *
+ * @param table the table
+ * @return is the table in the database?
+ */
+operator fun Database.contains(table: BaseTable<*>): Boolean = useConnection { connection ->
+    connection.metaData.getTables(table.catalog, table.schema, table.tableName, null).next()
+}
+
+/**
+ * Determines if the database contains the supplied table-bound column.
+ *
+ * @param column the column
+ * @return is the column in a table in the database?
+ */
+operator fun Database.contains(column: Column<*>): Boolean = useConnection { connection ->
+    connection.metaData.getColumns(column.table.catalog, column.table.schema, column.table.tableName, column.name).next()
+}

@@ -24,17 +24,21 @@ import org.ktorm.schema.Column
 /**
  * Represents a constraint on an SQL table.
  */
-abstract class Constraint {
+interface Constraint {
     /**
-     * Returns a [TableConstraintExpression] representing the definition of this constraint.
+     * Converts this constraint to a [TableConstraintExpression].
+     *
+     * @return the constraint expression
      */
-    abstract fun asExpression(): TableConstraintExpression
+    fun asExpression(): TableConstraintExpression
 }
 
 /**
  * A unique constraint, which ensures that every row has a different set of values for the given columns.
+ *
+ * @property across the columns
  */
-data class UniqueConstraint(val across: List<Column<*>>) : Constraint() {
+data class UniqueConstraint(val across: List<Column<*>>) : Constraint {
     override fun equals(other: Any?): Boolean = other is UniqueConstraint && this.across.zip(other.across) { a, b -> a.name == b.name }.all { it }
 
     override fun hashCode(): Int = across.hashCode()
@@ -46,8 +50,10 @@ data class UniqueConstraint(val across: List<Column<*>>) : Constraint() {
 
 /**
  * A check constraint, which ensures that inserted or updated rows adhere to the given [condition].
+ *
+ * @property condition the condition
  */
-data class CheckConstraint(val condition: ScalarExpression<Boolean>) : Constraint() {
+data class CheckConstraint(val condition: ScalarExpression<Boolean>) : Constraint {
     override fun equals(other: Any?): Boolean = other is CheckConstraint && this.condition == other.condition
 
     override fun hashCode(): Int = condition.hashCode()
@@ -57,18 +63,20 @@ data class CheckConstraint(val condition: ScalarExpression<Boolean>) : Constrain
 
 /**
  * A foreign key constraint, which ensures that the columns in [correspondence] map to the target table.
- * If the target row is modified, [onUpdate] is triggered.
- * If the target row is deleted, [onDelete] is triggered.
+ *
+ * @property to the target table
+ * @property correspondence the column mappings
+ * @property onUpdate action triggered when the target row is modified
+ * @property onDelete action triggered when the target row is deleted
  */
 data class ForeignKeyConstraint(
     val to: BaseTable<*>,
     val correspondence: Map<Column<*>, Column<*>>,
     val onUpdate: OnModification = OnModification.CASCADE,
     val onDelete: OnModification = OnModification.ERROR,
-) : Constraint() {
-
+) : Constraint {
     /**
-     * Represents the different ways of handling a target row modification.
+     * Represents different ways of handling a target row modification.
      */
     enum class OnModification {
         /**

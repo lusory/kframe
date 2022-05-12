@@ -23,57 +23,22 @@ import org.ktorm.schema.Column
 import org.ktorm.schema.SqlType
 
 /**
- * An expression or container of an expression that modifies schema.
- * This is built to be reversible.
- */
-interface ReversibleSchemaExpression {
-    /**
-     * Makes a [SqlExpression] that changes the schema.
-     */
-    fun create(): SqlExpression
-
-    /**
-     * Makes a [SqlExpression] that undoes changes made by [create].
-     */
-    fun undo(): SqlExpression
-}
-
-/**
- * Reverses a [ReversibleSchemaExpression].
- */
-data class ReversedSchemaExpression(val source: ReversibleSchemaExpression) : ReversibleSchemaExpression {
-    override fun create(): SqlExpression = source.undo()
-    override fun undo(): SqlExpression = source.create()
-}
-
-/**
- * Reverses the given [ReversibleSchemaExpression].
- */
-operator fun ReversibleSchemaExpression.unaryMinus(): ReversedSchemaExpression =
-    ReversedSchemaExpression(this)
-
-// Schemas
-
-/**
  * Creates a schema.
  *
- * @property name the name of the schema.
- * @property ifNotExists if true, do not error if the schema already exists.
+ * @property name the name of the schema
+ * @property ifNotExists if true, do not error if the schema already exists
  */
 data class CreateSchemaExpression(
     val name: String,
     val ifNotExists: Boolean = false,
     override val isLeafNode: Boolean = false,
     override val extraProperties: Map<String, Any> = emptyMap()
-) : SqlExpression(), ReversibleSchemaExpression {
-    override fun create(): SqlExpression = this
-    override fun undo(): DropSchemaExpression = DropSchemaExpression(name)
-}
+) : SqlExpression()
 
 /**
  * Drops a schema.
  *
- * @property name the name of the schema.
+ * @property name the name of the schema
  */
 data class DropSchemaExpression(
     val name: String,
@@ -81,14 +46,12 @@ data class DropSchemaExpression(
     override val extraProperties: Map<String, Any> = emptyMap()
 ) : SqlExpression()
 
-// Indexes
-
 /**
  * Creates an index.
  *
- * @property name the name of the index.
- * @property on the table on which to create an index.
- * @property columns the list of columns to index, ordered.
+ * @property name the name of the index
+ * @property on the table on which to create an index
+ * @property columns the list of columns to index, ordered
  */
 data class CreateIndexExpression(
     val name: String,
@@ -96,10 +59,7 @@ data class CreateIndexExpression(
     val columns: List<ColumnReferenceExpression>,
     override val isLeafNode: Boolean = false,
     override val extraProperties: Map<String, Any> = emptyMap()
-) : SqlExpression(), ReversibleSchemaExpression {
-    override fun create(): SqlExpression = this
-    override fun undo(): DropIndexExpression = DropIndexExpression(name, on)
-}
+) : SqlExpression()
 
 /**
  * Drops an index.
@@ -114,14 +74,12 @@ data class DropIndexExpression(
     override val extraProperties: Map<String, Any> = emptyMap()
 ) : SqlExpression()
 
-// Views
-
 /**
  * Creates a view.
  *
- * @property name the name of the view.
- * @property query the query this view shows the results of.
- * @property orReplace if true, just replace any view which already has this name.
+ * @property name the name of the view
+ * @property query the query this view shows the results of
+ * @property orReplace if true, just replace any view which already has this name
  */
 data class CreateViewExpression(
     val name: TableReferenceExpression,
@@ -129,15 +87,12 @@ data class CreateViewExpression(
     val orReplace: Boolean = false,
     override val isLeafNode: Boolean = false,
     override val extraProperties: Map<String, Any> = emptyMap()
-) : SqlExpression(), ReversibleSchemaExpression {
-    override fun create(): SqlExpression = this
-    override fun undo(): DropViewExpression = DropViewExpression(name)
-}
+) : SqlExpression()
 
 /**
  * Drops a view.
  *
- * @property name the name of the view.
+ * @property name the name of the view
  */
 data class DropViewExpression(
     val name: TableReferenceExpression,
@@ -145,16 +100,13 @@ data class DropViewExpression(
     override val extraProperties: Map<String, Any> = emptyMap()
 ) : SqlExpression()
 
-
-// Tables
-
 /**
  * Creates a table.
  *
- * @property name the name of the table.
- * @property columns the columns the table needs.
- * @property constraints the constraints the table has.
- * @property ifNotExists if true, ignores this operation if the table already exists.
+ * @property name the name of the table
+ * @property columns the columns the table needs
+ * @property constraints the constraints the table has
+ * @property ifNotExists if true, ignores this operation if the table already exists
  */
 data class CreateTableExpression(
     val name: TableReferenceExpression,
@@ -163,15 +115,12 @@ data class CreateTableExpression(
     val ifNotExists: Boolean = false,
     override val isLeafNode: Boolean = false,
     override val extraProperties: Map<String, Any> = emptyMap()
-) : SqlExpression(), ReversibleSchemaExpression {
-    override fun create(): SqlExpression = this
-    override fun undo(): DropTableExpression = DropTableExpression(name)
-}
+) : SqlExpression()
 
 /**
  * Drops a table.
  *
- * @property table the name of the table.
+ * @property table the name of the table
  */
 data class DropTableExpression(
     val table: TableReferenceExpression,
@@ -182,7 +131,7 @@ data class DropTableExpression(
 /**
  * Truncates a table, removing all of its rows.
  *
- * @property table the name of the table.
+ * @property table the name of the table
  */
 data class TruncateTableExpression(
     val table: TableReferenceExpression,
@@ -201,10 +150,7 @@ data class AlterTableAddExpression(
     val column: ColumnDeclarationExpression<*>,
     override val isLeafNode: Boolean = false,
     override val extraProperties: Map<String, Any> = emptyMap()
-) : SqlExpression(), ReversibleSchemaExpression {
-    override fun create(): SqlExpression = this
-    override fun undo(): AlterTableDropColumnExpression = AlterTableDropColumnExpression(table, ColumnReferenceExpression(column.name))
-}
+) : SqlExpression()
 
 /**
  * Drops a column from a table.
@@ -218,32 +164,6 @@ data class AlterTableDropColumnExpression(
     override val isLeafNode: Boolean = false,
     override val extraProperties: Map<String, Any> = emptyMap()
 ) : SqlExpression()
-
-/**
- * A reversible modification to an existing column.
- *
- * @property table the table the column belongs to
- * @property column the column to modify
- * @property oldType the old type of the column
- * @property newType the new type of the column
- * @property oldSize the old size of the column
- * @property newSize the new size of the column
- * @property oldNotNull whether used to be a restriction on the column's value being null
- * @property newNotNull whether there is a restriction on the column's value being null
- */
-data class AlterTableModifyColumnReversible(
-    val table: TableReferenceExpression,
-    val column: ColumnReferenceExpression,
-    val oldType: SqlType<*>,
-    val newType: SqlType<*>,
-    val oldSize: Int? = null,
-    val newSize: Int? = null,
-    val oldNotNull: Boolean = false,
-    val newNotNull: Boolean = false
-) : ReversibleSchemaExpression {
-    override fun create(): AlterTableModifyColumnExpression = AlterTableModifyColumnExpression(table, column, newType, newSize, newNotNull)
-    override fun undo(): AlterTableModifyColumnExpression = AlterTableModifyColumnExpression(table, column, oldType, oldSize, oldNotNull)
-}
 
 /**
  * A modification to an existing column.
@@ -263,27 +183,6 @@ data class AlterTableModifyColumnExpression(
     override val isLeafNode: Boolean = false,
     override val extraProperties: Map<String, Any> = emptyMap()
 ) : SqlExpression()
-
-/**
- * A changing of the default value for a given column.
- *
- * @property table the table the column belongs to
- * @property column the column to modify
- * @property oldDefault the old default of the column
- * @property newDefault the new default of the column
- */
-data class AlterTableDefaultReversible(
-    val table: TableReferenceExpression,
-    val column: ColumnReferenceExpression,
-    val oldDefault: ScalarExpression<*>? = null,
-    val newDefault: ScalarExpression<*>? = null
-) : ReversibleSchemaExpression {
-    private fun make(expression: ScalarExpression<*>?): SqlExpression =
-        if (expression != null) AlterTableSetDefaultExpression(table, column, expression) else AlterTableDropDefaultExpression(table, column)
-
-    override fun create(): SqlExpression = make(newDefault)
-    override fun undo(): SqlExpression = make(oldDefault)
-}
 
 /**
  * Sets the default value for a column.
@@ -326,10 +225,7 @@ data class AlterTableAddConstraintExpression(
     val tableConstraint: TableConstraintExpression,
     override val isLeafNode: Boolean = false,
     override val extraProperties: Map<String, Any> = emptyMap()
-) : SqlExpression(), ReversibleSchemaExpression {
-    override fun create(): SqlExpression = this
-    override fun undo(): SqlExpression = AlterTableDropConstraintExpression(table, constraintName, tableConstraint)
-}
+) : SqlExpression()
 
 /**
  * Drops a constraint from a table.
@@ -344,8 +240,6 @@ data class AlterTableDropConstraintExpression(
     override val isLeafNode: Boolean = false,
     override val extraProperties: Map<String, Any> = emptyMap()
 ) : SqlExpression()
-
-// Components
 
 /**
  * A declaration of a column for a table.
@@ -438,7 +332,7 @@ data class TableReferenceExpression(
     val catalog: String? = null,
     val schema: String? = null,
     override val isLeafNode: Boolean = true,
-    override val extraProperties: Map<String, Any> = mapOf(),
+    override val extraProperties: Map<String, Any> = emptyMap(),
 ) : SqlExpression()
 
 /**
@@ -453,7 +347,7 @@ fun BaseTable<*>.asReferenceExpression(): TableReferenceExpression =
 data class ColumnReferenceExpression(
     val name: String,
     override val isLeafNode: Boolean = true,
-    override val extraProperties: Map<String, Any> = mapOf(),
+    override val extraProperties: Map<String, Any> = emptyMap(),
 ) : SqlExpression()
 
 /**

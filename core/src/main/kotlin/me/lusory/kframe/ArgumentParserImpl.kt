@@ -71,7 +71,7 @@ internal class ArgumentParserImpl(
                         isLong
                     )
                 } else {
-                    lastArg = Pair(arg, isLong)
+                    lastArg = arg to isLong
                 }
             }
 
