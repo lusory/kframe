@@ -55,6 +55,9 @@ class KFramePlugin : Plugin<Project> {
             }
         }
 
+        // add annotation module dependency, must not be in afterEvaluate else kspKotlin task doesn't get created
+        target.dependencies.add("ksp", "me.lusory.kframe:annotation:${BuildInfo.VERSION}")
+
         // add 'kfrProcessor' alias for 'ksp'
         target.configurations.create("kfrProcessor") {
             it.extendsFrom(target.configurations.getByName("ksp"))
@@ -90,9 +93,8 @@ class KFramePlugin : Plugin<Project> {
                 target.dependencies.add("implementation", "org.jetbrains.kotlin:kotlin-reflect:$kotlinVersion")
             }
 
-            // add core and annotation module dependencies
+            // add core module dependency
             target.dependencies.add(if (extension.isApplication) "implementation" else "compileOnly", "me.lusory.kframe:core:${BuildInfo.VERSION}")
-            target.dependencies.add("ksp", "me.lusory.kframe:annotation:${BuildInfo.VERSION}")
 
             // add dependency injection metadata from dependencies
             // TODO: replace with https://github.com/google/ksp/issues/431
