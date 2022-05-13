@@ -23,6 +23,8 @@ import com.google.devtools.ksp.gradle.KspGradleSubplugin
 import me.lusory.kframe.gradle.BuildInfo
 import org.gradle.api.Plugin
 import org.gradle.api.Project
+import org.gradle.api.plugins.ApplicationPlugin
+import org.gradle.api.plugins.JavaApplication
 import org.gradle.jvm.tasks.Jar
 import org.jetbrains.kotlin.gradle.dsl.KotlinJvmProjectExtension
 import org.jetbrains.kotlin.gradle.plugin.KotlinPlatformJvmPlugin
@@ -38,9 +40,7 @@ import java.util.zip.ZipFile
 class KFramePlugin : Plugin<Project> {
     override fun apply(target: Project) {
         try {
-            if (!target.pluginManager.hasPlugin("org.jetbrains.kotlin.jvm")) {
-                target.pluginManager.apply(KotlinPlatformJvmPlugin::class.java)
-            }
+            target.pluginManager.apply(KotlinPlatformJvmPlugin::class.java)
         } catch (ignored: NoClassDefFoundError) {
             throw RuntimeException("The Kotlin Gradle plugin needs to be available on the classpath for KFrame to work")
         }
@@ -55,36 +55,47 @@ class KFramePlugin : Plugin<Project> {
             }
         }
 
-        if (extension.isApplication) {
-            // apply shadowJar, add dependency injection metadata and set main class name in jar manifest
-            target.pluginManager.apply(ShadowPlugin::class.java)
+        // add 'kfrProcessor' alias for 'ksp'
+        target.configurations.create("kfrProcessor") {
+            it.extendsFrom(target.configurations.getByName("ksp"))
+        }
 
-            target.extensions.configure(KspExtension::class.java) { ext ->
-                ext.arg("kframe.dependencyInjection.packageName", extension.mainPackageName)
-                ext.arg("kframe.dependencyInjection.className", extension.mainClassName)
-            }
+        // afterEvaluate is needed to load the extension properly
+        target.afterEvaluate {
+            if (extension.isApplication) {
+                // apply shadowJar, add dependency injection metadata and set main class name in jar manifest
+                target.pluginManager.apply(ShadowPlugin::class.java)
 
-            target.tasks.withType(Jar::class.java) { jar ->
-                jar.manifest { manifest ->
-                    manifest.attributes["Main-Class"] = extension.mainFQClassName
+                target.extensions.configure(KspExtension::class.java) { ext ->
+                    ext.arg("kframe.dependencyInjection.packageName", extension.mainPackageName)
+                    ext.arg("kframe.dependencyInjection.className", extension.mainClassName)
+                }
+
+                target.tasks.withType(Jar::class.java) { jar ->
+                    jar.manifest { manifest ->
+                        manifest.attributes["Main-Class"] = extension.mainFQClassName
+                    }
+                }
+
+                target.pluginManager.apply(ApplicationPlugin::class.java)
+                target.extensions.configure(JavaApplication::class.java) { ext ->
+                    ext.mainClass.set(extension.mainFQClassName)
                 }
             }
-        }
 
-        if (extension.applyKotlin && extension.isApplication) {
-            // apply kotlin-stdlib and reflect by the kotlin plugin version
-            val kotlinVersion: String = target.getKotlinPluginVersion()
-            target.dependencies.add("implementation", "org.jetbrains.kotlin:kotlin-stdlib:$kotlinVersion")
-            target.dependencies.add("implementation", "org.jetbrains.kotlin:kotlin-reflect:$kotlinVersion")
-        }
+            if (extension.applyKotlin && extension.isApplication) {
+                // apply kotlin-stdlib and reflect by the kotlin plugin version
+                val kotlinVersion: String = target.getKotlinPluginVersion()
+                target.dependencies.add("implementation", "org.jetbrains.kotlin:kotlin-stdlib:$kotlinVersion")
+                target.dependencies.add("implementation", "org.jetbrains.kotlin:kotlin-reflect:$kotlinVersion")
+            }
 
-        // add core and annotation module dependencies
-        target.dependencies.add(if (extension.isApplication) "implementation" else "compileOnly", "me.lusory.kframe:core:${BuildInfo.VERSION}")
-        target.dependencies.add("ksp", "me.lusory.kframe:annotation:${BuildInfo.VERSION}")
+            // add core and annotation module dependencies
+            target.dependencies.add(if (extension.isApplication) "implementation" else "compileOnly", "me.lusory.kframe:core:${BuildInfo.VERSION}")
+            target.dependencies.add("ksp", "me.lusory.kframe:annotation:${BuildInfo.VERSION}")
 
-        // add dependency injection metadata from dependencies
-        // TODO: replace with https://github.com/google/ksp/issues/431
-        target.afterEvaluate {
+            // add dependency injection metadata from dependencies
+            // TODO: replace with https://github.com/google/ksp/issues/431
             val members: MutableSet<String> = mutableSetOf()
             val classes: MutableSet<String> = mutableSetOf()
             val inits: MutableSet<String> = mutableSetOf()
@@ -107,17 +118,12 @@ class KFramePlugin : Plugin<Project> {
                 ext.arg("kframe.dependencyInjection.classes", classes.joinToString(",").toBase64())
                 ext.arg("kframe.dependencyInjection.inits", inits.joinToString(",").toBase64())
             }
-        }
 
-        // enable dependency injection if application
-        // else enable inject.properties generation
-        target.extensions.configure(KspExtension::class.java) { ext ->
-            ext.arg("kframe.${if (extension.isApplication) "dependencyInjection" else "injectProperties"}.enabled", "true")
-        }
-
-        // add 'kfrProcessor' alias for 'ksp'
-        target.configurations.create("kfrProcessor") {
-            it.extendsFrom(target.configurations.getByName("ksp"))
+            // enable dependency injection if application
+            // else enable inject.properties generation
+            target.extensions.configure(KspExtension::class.java) { ext ->
+                ext.arg("kframe.${if (extension.isApplication) "dependencyInjection" else "injectProperties"}.enabled", "true")
+            }
         }
     }
 }

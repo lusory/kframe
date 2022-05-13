@@ -49,9 +49,6 @@ class DependencyInjectionSubprocessor : KFrameSubprocessor {
         val packageName: String = environment.options["kframe.dependencyInjection.packageName"] ?: "kframe"
         val className: String = environment.options["kframe.dependencyInjection.className"] ?: "Main"
 
-        val builder: FileSpec.Builder = FileSpec.builder(packageName, className)
-            .jvmName(className)
-
         val mainBuilder: FunSpec.Builder = FunSpec.builder("main")
             .addParameter("args", ARRAY.parameterizedBy(STRING))
             .beginControlFlow("%M", MemberName("me.lusory.kframe.inject", "applicationContext"))
@@ -213,7 +210,9 @@ class DependencyInjectionSubprocessor : KFrameSubprocessor {
 
         mainBuilder.endControlFlow()
 
-        builder.addFunction(mainBuilder.build())
+        FileSpec.builder(packageName, className)
+            .jvmName(className)
+            .addFunction(mainBuilder.build())
             .indent("    ") // 4 space indent
             .addFileComment("This file was generated with KFrame. Do not edit, changes will be overwritten!")
             .build()
