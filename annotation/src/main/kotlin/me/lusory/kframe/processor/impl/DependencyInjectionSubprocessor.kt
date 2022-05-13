@@ -197,8 +197,7 @@ class DependencyInjectionSubprocessor : KFrameSubprocessor {
                 (environment.options["kframe.dependencyInjection.inits"] ?: "").fromBase64().split(',').toMutableList().apply { clearIfLogicallyEmpty() }
                     .flatMap { resolver.getFunctionDeclarationsByName(resolver.getKSNameFromString(it), includeTopLevel = true) }
             )
-            sortedByDescending { it.getAnnotationsByType("me.lusory.kframe.inject.Init").first().arguments.first { arg -> arg.name?.asString() == "priority" }.value as Int }
-        }
+        }.sortedByDescending { it.getAnnotationsByType("me.lusory.kframe.inject.Init").first().arguments.first { arg -> arg.name?.asString() == "priority" }.value as Int }
 
         if (inits.isNotEmpty()) {
             mainBuilder.beginControlFlow("afterBuild { context ->")
