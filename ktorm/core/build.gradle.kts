@@ -15,3 +15,5 @@ dependencies {
 }
 
 enableTests()
+
+java.disableAutoTargetJvm() // disable Java-bound dependency targeting (due to Hikari)
