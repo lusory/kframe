@@ -15,6 +15,7 @@ object DependencyVersions {
     const val HIKARI = "5.0.1"
     const val H2 = "2.1.212"
     const val GRPC = "1.46.0"
+    const val GRPC_KOTLIN = "1.2.1"
     const val TOMCAT_ANNOTATIONS = "10.0.21"
     const val PROTOBUF_GRADLE = "0.8.18"
     const val PROTOC = "3.20.1"

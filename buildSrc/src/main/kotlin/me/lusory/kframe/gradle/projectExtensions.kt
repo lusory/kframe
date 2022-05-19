@@ -11,6 +11,7 @@ fun Project.addPublication() {
         publications {
             create<MavenPublication>("mavenJava") {
                 from(components["java"])
+                artifact(tasks["kotlinSourcesJar"])
                 pom {
                     name.set("kframe")
                     description.set("A lightweight application framework for Kotlin")

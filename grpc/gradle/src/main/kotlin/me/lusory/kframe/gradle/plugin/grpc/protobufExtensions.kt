@@ -19,12 +19,19 @@ fun Project.configureGrpc() {
             id("grpc") {
                 artifact = "io.grpc:protoc-gen-grpc-java:${DependencyVersions.GRPC}"
             }
+            id("grpckt") {
+                artifact = "io.grpc:protoc-gen-grpc-kotlin:${DependencyVersions.GRPC_KOTLIN}"
+            }
         }
 
         generateProtoTasks {
             all().forEach {
                 it.plugins {
                     id("grpc")
+                    id("grpckt")
+                }
+                it.builtins {
+                    id("kotlin")
                 }
             }
         }
@@ -37,5 +44,5 @@ fun Project.configureGrpc() {
         if (GradleVersion.version(gradle.gradleVersion) < GradleVersion.version("7.1")) convention.getPlugin(JavaPluginConvention::class.java).sourceSets
         else extensions.getByType(JavaPluginExtension::class.java).sourceSets
 
-    getSourceSets().forEach { it.java.srcDirs("$buildDir/generatedProto/${it.name}/java") }
+    getSourceSets().forEach { it.java.srcDirs("$buildDir/generatedProto/${it.name}/java", "$buildDir/generatedProto/${it.name}/kotlin") }
 }
