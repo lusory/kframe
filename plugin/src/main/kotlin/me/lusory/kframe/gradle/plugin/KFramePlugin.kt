@@ -21,6 +21,7 @@ import com.github.jengelman.gradle.plugins.shadow.ShadowPlugin
 import com.google.devtools.ksp.gradle.KspExtension
 import com.google.devtools.ksp.gradle.KspGradleSubplugin
 import me.lusory.kframe.gradle.BuildInfo
+import org.gradle.api.GradleException
 import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.api.plugins.ApplicationPlugin
@@ -42,7 +43,7 @@ class KFramePlugin : Plugin<Project> {
         try {
             target.pluginManager.apply(KotlinPlatformJvmPlugin::class.java)
         } catch (ignored: NoClassDefFoundError) {
-            throw RuntimeException("The Kotlin Gradle plugin needs to be available on the classpath for KFrame to work")
+            throw GradleException("The Kotlin Gradle plugin needs to be available on the classpath for KFrame to work")
         }
 
         val extension: KFramePluginExtension = target.extensions.create("kframe", KFramePluginExtension::class.java)

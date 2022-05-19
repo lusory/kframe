@@ -15,3 +15,4 @@ include(
 
 registerCombinedModule("ktorm", "core", "mysql")
 registerCombinedModule("ktor", "server", "client")
+registerCombinedModule("grpc", "core", "gradle")
