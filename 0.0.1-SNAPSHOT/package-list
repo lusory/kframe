@@ -10,6 +10,8 @@ me.lusory.kframe
 me.lusory.kframe.exceptions
 me.lusory.kframe.inject
 me.lusory.kframe.util
+module:grpc-gradle
+me.lusory.kframe.gradle.plugin.grpc
 module:ktorm-core
 me.lusory.kframe.data.ktorm
 me.lusory.kframe.data.ktorm.sql
