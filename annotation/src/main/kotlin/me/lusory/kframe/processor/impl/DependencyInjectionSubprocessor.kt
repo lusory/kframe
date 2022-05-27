@@ -202,7 +202,15 @@ class DependencyInjectionSubprocessor : KFrameSubprocessor {
         if (inits.isNotEmpty()) {
             mainBuilder.beginControlFlow("afterBuild { context ->")
 
-            inits.forEach { mainBuilder.listenerCall(it, vars) }
+            val contextVars: MutableMap<String, MutableList<Triple<String, Boolean, String?>>> = vars.toMutableMap().apply {
+                vars.getOrPut("me.lusory.kframe.inject.ApplicationContext") { mutableListOf() }.add(Triple(
+                    "context",
+                    false,
+                    "context" // "context" qualifier
+                ))
+            }
+
+            inits.forEach { mainBuilder.listenerCall(it, contextVars) }
 
             mainBuilder.endControlFlow()
         }
@@ -231,37 +239,40 @@ class DependencyInjectionSubprocessor : KFrameSubprocessor {
 
     private fun FunSpec.Builder.listenerCall(symbol: KSAnnotated, vars: Map<String, MutableList<Triple<String, Boolean, String?>>>) {
         if (symbol is KSFunctionDeclaration) {
-            if (symbol.functionKind == FunctionKind.TOP_LEVEL) {
-                val memberName = MemberName(symbol.packageName.asString(), symbol.simpleName.asString())
-                if (symbol.parameters.size == 1 && symbol.parameters[0].type.resolve().declaration.qualifiedName?.asString() == "me.lusory.kframe.inject.ApplicationContext") {
-                    addStatement("%M(context)", memberName)
-                } else if (symbol.parameters.isEmpty()) {
-                    addStatement("%M()", memberName)
-                } else {
-                    throw IllegalArgumentException("@Init annotated methods must accept zero parameters or only one of type ApplicationContext ($symbol)")
-                }
-            } else if (symbol.functionKind == FunctionKind.MEMBER) {
-                val parentClassName: String = (symbol.parentDeclaration as? KSClassDeclaration)!!.qualifiedName!!.asString()
-                val memberVars = vars[parentClassName]
-                    ?.filter { !it.second } // filter non-singletons
+            val params: MutableList<String> = mutableListOf()
 
-                if (memberVars == null) {
-                    environment.logger.warn("Initializer method ${symbol.simpleName} found for non-component type $parentClassName")
-                    return
-                }
+            for (param: KSValueParameter in symbol.parameters) {
+                val exactType: String? = param.getAnnotationsByType("me.lusory.kframe.inject.Exact")
+                    .firstOrNull()
+                    ?.let { (it.arguments.first { arg -> arg.name?.asString() == "name" }.value as String).nullIfEmpty() }
 
-                for (memberVar in memberVars) {
-                    if (symbol.parameters.size == 1 && symbol.parameters[0].type.resolve().declaration.qualifiedName?.asString() == "me.lusory.kframe.inject.ApplicationContext") {
-                        addStatement("${memberVar.first}.${symbol.simpleName}(context)")
-                    } else if (symbol.parameters.isEmpty()) {
-                        addStatement("${memberVar.first}.${symbol.simpleName}()")
-                    } else {
-                        throw IllegalArgumentException("@Init annotated methods must accept zero parameters or only one of type ApplicationContext ($symbol)")
-                    }
-                }
-            } else {
-                throw UnsupportedOperationException("Only top-level or component member functions can be annotated with @Init")
+                params.add(
+                    param.type.resolve().declaration.qualifiedName?.asString()
+                        ?.let { vars[it] }
+                        ?.let { if (exactType != null) it.firstOrNull { triple -> triple.third == exactType } else it.first() }
+                        ?.let { if (it.second) "${it.first}()" else it.first }
+                        ?: throw DependencyResolveException("Unsatisfied dependency ${param.type.resolve().declaration.qualifiedName?.asString()} (exact type $exactType)")
+                )
             }
+
+            when (symbol.functionKind) {
+                FunctionKind.TOP_LEVEL -> {
+                    addStatement("%M(${params.joinToString(", ")})", MemberName(symbol.packageName.asString(), symbol.simpleName.asString()))
+                }
+                FunctionKind.MEMBER -> {
+                    val parentClassName: String = (symbol.parentDeclaration as? KSClassDeclaration)!!.qualifiedName!!.asString()
+
+                    vars[parentClassName]
+                        ?.filter { !it.second } // filter non-singletons
+                        ?.forEach { addStatement("${it.first}.${symbol.simpleName}(${params.joinToString(", ")})") }
+                        ?: environment.logger.warn("Initializer method ${symbol.simpleName} found for non-component type $parentClassName")
+                }
+                else -> {
+                    throw UnsupportedOperationException("Only top-level or component member functions can be annotated with @Init")
+                }
+            }
+        } else {
+            throw UnsupportedOperationException("Only top-level or component member functions can be annotated with @Init")
         }
     }
 
