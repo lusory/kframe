@@ -264,8 +264,8 @@ class DependencyInjectionSubprocessor : KFrameSubprocessor {
 
                     vars[parentClassName]
                         ?.filter { !it.second } // filter non-singletons
-                        ?.forEach { addStatement("${it.first}.${symbol.simpleName}(${params.joinToString(", ")})") }
-                        ?: environment.logger.warn("Initializer method ${symbol.simpleName} found for non-component type $parentClassName")
+                        ?.forEach { addStatement("${it.first}.${symbol.simpleName.asString()}(${params.joinToString(", ")})") }
+                        ?: environment.logger.warn("Initializer method ${symbol.simpleName.asString()} found for non-component type $parentClassName")
                 }
                 else -> {
                     throw UnsupportedOperationException("Only top-level or component member functions can be annotated with @Init")
