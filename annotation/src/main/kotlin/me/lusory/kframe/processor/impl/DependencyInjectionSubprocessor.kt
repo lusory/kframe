@@ -203,7 +203,7 @@ class DependencyInjectionSubprocessor : KFrameSubprocessor {
             mainBuilder.beginControlFlow("afterBuild { context ->")
 
             val contextVars: MutableMap<String, MutableList<Triple<String, Boolean, String?>>> = vars.toMutableMap().apply {
-                vars.getOrPut("me.lusory.kframe.inject.ApplicationContext") { mutableListOf() }.add(Triple(
+                getOrPut("me.lusory.kframe.inject.ApplicationContext") { mutableListOf() }.add(Triple(
                     "context",
                     false,
                     "context" // "context" qualifier
