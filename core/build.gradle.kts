@@ -12,6 +12,7 @@ dependencies {
         exclude(group = "org.jetbrains.kotlin")
     }
     runtimeOnly(group = "org.tinylog", name = "tinylog-impl", version = DependencyVersions.TINYLOG)
+    runtimeOnly(group = "org.tinylog", name = "slf4j-tinylog", version = DependencyVersions.TINYLOG)
 
     ksp(project(":annotation"))
 }

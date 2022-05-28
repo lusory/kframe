@@ -100,9 +100,9 @@ fun argumentParser(@Exact(name = "args") args: Array<String>): ArgumentParser = 
  * @suppress API for internal use
  */
 @Init(priority = InitPriority.INTERNAL_HIGH)
-fun populateProperties(context: ApplicationContext) {
+fun populateProperties(argParser: ArgumentParser) {
     val cmdProps = Properties()
-    for (arg: Argument in context[ArgumentParser::class]!!.args) {
+    for (arg: Argument in argParser.args) {
         if (arg.isLong) {
             cmdProps[arg.name] = arg.value
         }
