@@ -60,7 +60,7 @@ class TestComponent1 {
 
 The `@Init` annotation can mark a function to run after the `ApplicationContext` has been built.
 
-The function can be a part of a component or a top-level function, and it can accept zero or one parameter of type `ApplicationContext`.
+The function can be a part of a component or a top-level function, and it can accept components available for dependency injection as parameters (including ApplicationContext).
 
 A `shutdownHook` lambda is provided for convenience, this is a shortcut for `Runtime#addShutdownHook`.
 
