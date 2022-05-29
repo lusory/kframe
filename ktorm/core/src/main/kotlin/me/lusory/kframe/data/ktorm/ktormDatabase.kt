@@ -36,6 +36,21 @@ inline fun database(block: HikariConfig.() -> Unit): Database = Database.connect
     logger = TinylogLoggerAdapter()
 )
 
+internal fun String.toSqlIdentifier(database: Database): String {
+    if (!database.supportsMixedCaseIdentifiers) {
+        if (database.storesUpperCaseIdentifiers) {
+            return this.uppercase()
+        }
+        if (database.storesLowerCaseIdentifiers) {
+            return this.lowercase()
+        }
+        if (database.storesMixedCaseIdentifiers) {
+            return this
+        }
+    }
+    return this
+}
+
 /**
  * Determines if the database contains the supplied table.
  *
@@ -43,7 +58,7 @@ inline fun database(block: HikariConfig.() -> Unit): Database = Database.connect
  * @return is the table in the database?
  */
 operator fun Database.contains(table: BaseTable<*>): Boolean = useConnection { connection ->
-    connection.metaData.getTables(table.catalog, table.schema, table.tableName, null).next()
+    connection.metaData.getTables(table.catalog, table.schema, table.tableName.toSqlIdentifier(this), null).next()
 }
 
 /**
@@ -53,5 +68,5 @@ operator fun Database.contains(table: BaseTable<*>): Boolean = useConnection { c
  * @return is the column in a table in the database?
  */
 operator fun Database.contains(column: Column<*>): Boolean = useConnection { connection ->
-    connection.metaData.getColumns(column.table.catalog, column.table.schema, column.table.tableName, column.name).next()
+    connection.metaData.getColumns(column.table.catalog, column.table.schema, column.table.tableName.toSqlIdentifier(this), column.name.toSqlIdentifier(this)).next()
 }
