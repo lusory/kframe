@@ -18,11 +18,16 @@
 package me.lusory.kframe.inject
 
 /**
- * Marks a constructor as eligible for dependency injection, useful when a class has multiple constructors.
+ * Marks a constructor or a property as a dependency injection candidate.
+ *
+ * This is not necessary for primary constructors or when the class has just one constructor.
+ *
+ * When a property is annotated and its type subclasses [Collection], all components which subclass the element type of the collection are injected on runtime into the property.
+ * **This annotation does not do anything for non-Collection properties.**
  *
  * @since 0.0.1
  */
-@Target(AnnotationTarget.CONSTRUCTOR)
+@Target(AnnotationTarget.CONSTRUCTOR, AnnotationTarget.PROPERTY)
 @Retention(AnnotationRetention.RUNTIME)
 @MustBeDocumented
 annotation class Autowired

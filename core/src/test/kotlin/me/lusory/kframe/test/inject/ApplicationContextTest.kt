@@ -17,9 +17,12 @@
 
 package me.lusory.kframe.test.inject
 
+import me.lusory.kframe.inject.ApplicationContext
+import me.lusory.kframe.inject.Autowired
 import me.lusory.kframe.inject.applicationContext
 import kotlin.test.Test
 import kotlin.test.assertContentEquals
+import kotlin.test.assertNotNull
 
 class ApplicationContextTest {
     @Test
@@ -35,5 +38,36 @@ class ApplicationContextTest {
             expected,
             actual = applicationContext { for (obj in expected) { newComponentProvider { obj }() } }.components.asIterable()
         )
+    }
+
+    @Test
+    fun injectProperties() {
+        applicationContext {
+            val var0: TestObj1 = newComponent {
+                TestObj1()
+            }
+            newComponent {
+                "test1"
+            }
+            newComponent {
+                "test2"
+            }
+            afterBuild { context ->
+                println(var0)
+                assertNotNull(var0.context)
+                assertNotNull(var0.strings)
+                assertContentEquals(expected = listOf("test1", "test2"), actual = var0.strings)
+            }
+        }
+    }
+
+    class TestObj1 {
+        lateinit var context: ApplicationContext
+        @Autowired
+        lateinit var strings: Collection<String>
+
+        override fun toString(): String {
+            return "TestObj1(context=$context, strings=$strings)"
+        }
     }
 }

@@ -48,6 +48,9 @@ The annotation processor does not account for generic type parameters, `Collecti
 \@Component(name = "testComponent1")
 class TestComponent1 {
     private lateinit var context: ApplicationContext
+    @Autowired // injects all TestComponent2 instances, can be a List or a superclass of List
+    private lateinit var testComponents: Collection<TestComponent2>
+    
     fun foo() {
         // use the context
         context[TestComponent2::class] // returns a TestComponent2 instance
