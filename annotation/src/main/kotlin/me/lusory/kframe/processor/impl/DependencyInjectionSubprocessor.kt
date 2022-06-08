@@ -97,7 +97,7 @@ class DependencyInjectionSubprocessor : KFrameSubprocessor {
                             ?.let { (it.arguments.first { arg -> arg.name?.asString() == "name" }.value as String).nullIfEmpty() }
 
                         val varName: String? = param.type.resolve().declaration.qualifiedName?.asString()
-                            ?.let { vars[it] }
+                            ?.let { vars.entries.firstOrNull { e -> e.key == it || resolver.getClassDeclarationByName(e.key)!!.resolveSuperTypes().any { s -> s == it } }?.value }
                             ?.let { if (exactType != null) it.firstOrNull { triple -> triple.third == exactType } else it.first() }
                             ?.let { if (it.second) "${it.first}()" else it.first }
 
@@ -152,7 +152,7 @@ class DependencyInjectionSubprocessor : KFrameSubprocessor {
                         ?.let { (it.arguments.first { arg -> arg.name?.asString() == "name" }.value as String).nullIfEmpty() }
 
                     val varName: String? = param.type.resolve().declaration.qualifiedName?.asString()
-                        ?.let { vars[it] }
+                        ?.let { vars.entries.firstOrNull { e -> e.key == it || resolver.getClassDeclarationByName(e.key)!!.resolveSuperTypes().any { s -> s == it } }?.value }
                         ?.let { if (exactType != null) it.firstOrNull { triple -> triple.third == exactType } else it.first() }
                         ?.let { if (it.second) "${it.first}()" else it.first }
 
@@ -210,7 +210,7 @@ class DependencyInjectionSubprocessor : KFrameSubprocessor {
                 ))
             }
 
-            inits.forEach { mainBuilder.listenerCall(it, contextVars) }
+            inits.forEach { mainBuilder.listenerCall(it, resolver, contextVars) }
 
             mainBuilder.endControlFlow()
         }
@@ -237,7 +237,7 @@ class DependencyInjectionSubprocessor : KFrameSubprocessor {
             ?: throw DependencyResolveException("No autowiring constructor found for class " + classDeclaration.qualifiedName?.asString())
     }
 
-    private fun FunSpec.Builder.listenerCall(symbol: KSAnnotated, vars: Map<String, MutableList<Triple<String, Boolean, String?>>>) {
+    private fun FunSpec.Builder.listenerCall(symbol: KSAnnotated, resolver: Resolver, vars: Map<String, MutableList<Triple<String, Boolean, String?>>>) {
         if (symbol is KSFunctionDeclaration) {
             val params: MutableList<String> = mutableListOf()
 
@@ -248,7 +248,7 @@ class DependencyInjectionSubprocessor : KFrameSubprocessor {
 
                 params.add(
                     param.type.resolve().declaration.qualifiedName?.asString()
-                        ?.let { vars[it] }
+                        ?.let { vars.entries.firstOrNull { e -> e.key == it || resolver.getClassDeclarationByName(e.key)!!.resolveSuperTypes().any { s -> s == it } }?.value }
                         ?.let { if (exactType != null) it.firstOrNull { triple -> triple.third == exactType } else it.first() }
                         ?.let { if (it.second) "${it.first}()" else it.first }
                         ?: throw DependencyResolveException("Unsatisfied dependency ${param.type.resolve().declaration.qualifiedName?.asString()} (exact type $exactType)")
@@ -274,6 +274,17 @@ class DependencyInjectionSubprocessor : KFrameSubprocessor {
         } else {
             throw UnsupportedOperationException("Only top-level or component member functions can be annotated with @Init")
         }
+    }
+
+    private fun KSClassDeclaration.resolveSuperTypes(): Set<String> {
+        val superTypes: MutableSet<String> = mutableSetOf()
+
+        this.superTypes.forEach { superType ->
+            superTypes.add(superType.resolve().declaration.qualifiedName?.asString() ?: return@forEach)
+            superTypes.addAll((superType.resolve().declaration as KSClassDeclaration).resolveSuperTypes())
+        }
+
+        return superTypes
     }
 
     private data class BacklogItem(
