@@ -24,13 +24,17 @@ import me.lusory.kframe.gradle.BuildInfo
 import org.gradle.api.GradleException
 import org.gradle.api.Plugin
 import org.gradle.api.Project
+import org.gradle.api.logging.LogLevel
 import org.gradle.api.plugins.ApplicationPlugin
 import org.gradle.api.plugins.JavaApplication
 import org.gradle.jvm.tasks.Jar
 import org.jetbrains.kotlin.gradle.dsl.KotlinJvmProjectExtension
 import org.jetbrains.kotlin.gradle.plugin.KotlinPlatformJvmPlugin
 import org.jetbrains.kotlin.gradle.plugin.getKotlinPluginVersion
+import java.io.File
 import java.util.*
+import java.util.zip.ZipEntry
+import java.util.zip.ZipException
 import java.util.zip.ZipFile
 
 /**
@@ -103,15 +107,33 @@ class KFramePlugin : Plugin<Project> {
             val classes: MutableSet<String> = mutableSetOf()
             val inits: MutableSet<String> = mutableSetOf()
             target.configurations.getByName("compileClasspath").resolvedConfiguration.resolvedArtifacts.forEach { artifact ->
-                ZipFile(artifact.file).use { zipFile ->
-                    zipFile.entries().iterator().forEach { entry ->
-                        if (entry.name.substringAfterLast('/') == "inject.properties") {
-                            val props: Properties = Properties().also { it.load(zipFile.getInputStream(entry)) }
-                            members.addAll((props["kframe.dependencyInjection.members"] as? String ?: "").split(',').toMutableList().apply { clearIfLogicallyEmpty() })
-                            classes.addAll((props["kframe.dependencyInjection.classes"] as? String ?: "").split(',').toMutableList().apply { clearIfLogicallyEmpty() })
-                            inits.addAll((props["kframe.dependencyInjection.inits"] as? String ?: "").split(',').toMutableList().apply { clearIfLogicallyEmpty() })
+                val props = Properties()
+                if (artifact.file.isDirectory) {
+                    for (f: File in artifact.file.walkTopDown()) {
+                        if (f.isFile && f.name == "inject.properties") {
+                            props.load(f.reader())
+                            break
                         }
                     }
+                } else {
+                    try {
+                        ZipFile(artifact.file).use { zipFile ->
+                            for (entry: ZipEntry in zipFile.entries().iterator()) {
+                                if (entry.name.substringAfterLast('/') == "inject.properties") {
+                                    props.load(zipFile.getInputStream(entry))
+                                    break
+                                }
+                            }
+                        }
+                    } catch (e: ZipException) {
+                        target.logger.log(LogLevel.ERROR, "Exception while processing inject.properties for ${artifact.file.absolutePath}", e)
+                    }
+                }
+
+                if (props.isNotEmpty()) {
+                    members.addAll((props["kframe.dependencyInjection.members"] as? String ?: "").split(',').toMutableList().apply { clearIfLogicallyEmpty() })
+                    classes.addAll((props["kframe.dependencyInjection.classes"] as? String ?: "").split(',').toMutableList().apply { clearIfLogicallyEmpty() })
+                    inits.addAll((props["kframe.dependencyInjection.inits"] as? String ?: "").split(',').toMutableList().apply { clearIfLogicallyEmpty() })
                 }
             }
 
