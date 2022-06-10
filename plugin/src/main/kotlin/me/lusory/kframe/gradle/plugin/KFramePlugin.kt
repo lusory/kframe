@@ -115,7 +115,7 @@ class KFramePlugin : Plugin<Project> {
                             break
                         }
                     }
-                } else {
+                } else if (artifact.file.isFile) {
                     try {
                         ZipFile(artifact.file).use { zipFile ->
                             for (entry: ZipEntry in zipFile.entries().iterator()) {
