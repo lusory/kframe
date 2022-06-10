@@ -9,6 +9,7 @@ module:core
 me.lusory.kframe
 me.lusory.kframe.exceptions
 me.lusory.kframe.inject
+me.lusory.kframe.inject.runtime
 me.lusory.kframe.util
 module:grpc-gradle
 me.lusory.kframe.gradle.plugin.grpc
