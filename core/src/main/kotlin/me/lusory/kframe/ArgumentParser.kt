@@ -18,10 +18,7 @@
 package me.lusory.kframe
 
 import me.lusory.kframe.inject.*
-import me.lusory.kframe.util.InternalAPI
-import me.lusory.kframe.util.getClasspathResource
-import me.lusory.kframe.util.properties
-import me.lusory.kframe.util.property
+import me.lusory.kframe.util.*
 import java.util.*
 
 /**
@@ -96,7 +93,7 @@ fun argumentParser(@Exact(name = "args") args: Array<String>): ArgumentParser = 
  *
  * Properties provided as long arguments will take precedence before classpath configuration and other system properties.
  *
- * @param context the application context
+ * @param argParser the argument parser
  * @suppress API for internal use
  */
 @Init(priority = InitPriority.INTERNAL_HIGH)
@@ -108,9 +105,11 @@ fun populateProperties(argParser: ArgumentParser) {
         }
     }
 
-    getClasspathResource(cmdProps["kframe.configuration.classpath"] as? String ?: property("kframe.configuration.classpath") ?: "application.properties")?.let { inputStream ->
-        properties().load(inputStream)
-    }
+    RuntimeProvider.getClasspathResource(
+        cmdProps["kframe.configuration.classpath"] as? String
+            ?: property("kframe.configuration.classpath")
+            ?: "application.properties"
+    )?.let { inputStream -> properties().load(inputStream) }
 
     // command line supplied properties should take precedence before the classpath configuration
     properties().putAll(cmdProps)

@@ -34,19 +34,25 @@ object RuntimeProvider {
             }
             return setOf(javaClass.classLoader)
         }
+
+    /**
+     * Retrieves a classpath resource from the [RuntimeProvider] or the current thread context class loader by its name.
+     *
+     * @param name the resource name, does not need to be prefixed with `/`
+     * @return the resource stream, null if not found
+     * @since 0.0.1
+     */
+    fun getClasspathResource(name: String): InputStream? {
+        classLoaders.forEach { cl -> cl.getClasspathResource(name)?.let { return it } }
+        return null
+    }
 }
 
 /**
- * Retrieves a classpath resource by its name.
+ * Retrieves a classpath resource in this [ClassLoader] by its name.
  *
  * @param name the resource name, does not need to be prefixed with `/`
  * @return the resource stream, null if not found
  * @since 0.0.1
  */
-fun getClasspathResource(name: String): InputStream? {
-    val realName: String = if (!name.startsWith('/')) "/$name" else name
-
-    RuntimeProvider.classLoaders.forEach { cl -> cl.getResourceAsStream(realName)?.let { return it } }
-
-    return null
-}
+fun ClassLoader.getClasspathResource(name: String): InputStream? = getResourceAsStream(if (!name.startsWith('/')) "/$name" else name)
