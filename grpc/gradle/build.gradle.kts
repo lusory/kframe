@@ -18,7 +18,7 @@ dependencies {
 
 buildConfig {
     forClass(packageName = "me.lusory.kframe.gradle.plugin.grpc", className = "DependencyVersions") {
-        buildConfigField("String", "PROTOC", "\"${DependencyVersions.PROTOC}\"")
+        buildConfigField("String", "PROTOBUF", "\"${DependencyVersions.PROTOBUF}\"")
         buildConfigField("String", "GRPC", "\"${DependencyVersions.GRPC}\"")
         buildConfigField("String", "GRPC_KOTLIN", "\"${DependencyVersions.GRPC_KOTLIN}\"")
     }

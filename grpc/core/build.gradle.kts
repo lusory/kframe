@@ -12,5 +12,6 @@ dependencies {
         }
     }
     api(group = "io.grpc", name = "grpc-protobuf", version = DependencyVersions.GRPC)
+    api(group = "com.google.protobuf", name = "protobuf-kotlin", version = DependencyVersions.PROTOBUF)
     compileOnlyApi(group = "org.apache.tomcat", name = "tomcat-annotations-api", version = DependencyVersions.TOMCAT_ANNOTATIONS)
 }

@@ -12,7 +12,7 @@ fun Project.configureGrpc() {
 
     protobuf {
         protoc {
-            artifact = "com.google.protobuf:protoc:${DependencyVersions.PROTOC}"
+            artifact = "com.google.protobuf:protoc:${DependencyVersions.PROTOBUF}"
         }
 
         plugins {
