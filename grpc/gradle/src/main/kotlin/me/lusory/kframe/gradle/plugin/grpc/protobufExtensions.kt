@@ -20,7 +20,7 @@ fun Project.configureGrpc() {
                 artifact = "io.grpc:protoc-gen-grpc-java:${DependencyVersions.GRPC}"
             }
             id("grpckt") {
-                artifact = "io.grpc:protoc-gen-grpc-kotlin:${DependencyVersions.GRPC_KOTLIN}"
+                artifact = "io.grpc:protoc-gen-grpc-kotlin:${DependencyVersions.GRPC_KOTLIN}:jdk8@jar"
             }
         }
 
