@@ -44,5 +44,12 @@ fun Project.configureGrpc() {
         if (GradleVersion.version(gradle.gradleVersion) < GradleVersion.version("7.1")) convention.getPlugin(JavaPluginConvention::class.java).sourceSets
         else extensions.getByType(JavaPluginExtension::class.java).sourceSets
 
-    getSourceSets().forEach { it.java.srcDirs("$buildDir/generatedProto/${it.name}/java", "$buildDir/generatedProto/${it.name}/kotlin") }
+    getSourceSets().forEach {
+        it.java.srcDirs(
+            "$buildDir/generatedProto/${it.name}/java",
+            "$buildDir/generatedProto/${it.name}/kotlin",
+            "$buildDir/generatedProto/${it.name}/grpc",
+            "$buildDir/generatedProto/${it.name}/grpckt"
+        )
+    }
 }
